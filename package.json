@@ -3,9 +3,8 @@
   "author": "stagas",
   "short": "stagas/vdomini",
   "description": "mini jsx-compatible virtual dom",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "license": "MIT",
-  "private": true,
   "repository": {
     "type": "git",
     "url": "git+https://git@github.com:stagas/vdomini.git"
