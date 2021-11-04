@@ -1,0 +1,30 @@
+{
+  "auto-run-command.rules": [
+    {
+      "condition": [
+        "hasFile: coverage/lcov.info"
+      ],
+      "command": "coverage-gutters.watchCoverageAndVisibleEditors",
+      "message": "Running coverage"
+    }
+  ],
+  "restoreTerminals.terminals": [
+    {
+      "splitTerminals": [
+        {
+          "name": "coverage",
+          "commands": [
+            "npm run cov:watch"
+          ]
+        },
+        {
+          "name": "zsh",
+          "commands": []
+        }
+      ]
+    },
+  ],
+  "todo-tree.tree.scanMode": "workspace only",
+  "jest.jestCommandLine": "./node_modules/.bin/jest",
+  "npm-scripts.showStartNotification": false
+}

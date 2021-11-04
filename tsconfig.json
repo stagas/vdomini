@@ -1,0 +1,24 @@
+{
+  "extends": "@tsconfig/node16/tsconfig.json",
+  "include": [
+    "src",
+    "examples"
+  ],
+  "ts-node": {
+    "files": true
+  },
+  "compilerOptions": {
+    "outDir": "dist",
+    "moduleResolution": "node",
+    "experimentalDecorators": true,
+    "isolatedModules": true,
+    "declaration": true,
+    "sourceMap": true,
+    "module": "commonjs",
+    "target": "esnext",
+    "jsx": "react",
+    "jsxFactory": "h",
+    "jsxFragmentFactory": "Fragment",
+    "strict": true
+  }
+}
