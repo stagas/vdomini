@@ -20,6 +20,7 @@ const vtree = (
   </>
 )
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 console.log(require('util').inspect(vtree, { colors: true, depth: 10 }))
 /* =>
 

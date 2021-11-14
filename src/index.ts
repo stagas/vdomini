@@ -1,12 +1,3 @@
-import { camelCase } from './util'
-
-const propsToCamelCase = (props: VProps) =>
-  props
-    ? Object.fromEntries(
-        Object.entries(props).map(([key, value]) => [camelCase(key), value])
-      )
-    : null
-
 /**
  * VTag.
  */
@@ -41,6 +32,6 @@ export const h = <T>(
   ...children: VChildren
 ): VNode<T> => ({
   tag,
-  props: propsToCamelCase(props),
-  children: children.flat()
+  props,
+  children,
 })

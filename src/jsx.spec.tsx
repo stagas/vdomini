@@ -31,6 +31,12 @@ describe('jsx', () => {
     expect(v.props.helloWorld).toEqual('hi')
   })
 
+  it('with attribute multiword kebab-case', () => {
+    const v = <foo hello-world={'hi'} />
+    expect(v.tag).toEqual('foo')
+    expect(v.props.helloWorld).toEqual('hi')
+  })
+
   it('with attribute number', () => {
     const v = <foo hello={15} />
     expect(v.tag).toEqual('foo')
@@ -69,7 +75,7 @@ describe('jsx', () => {
     const v = (
       <foo>
         {[1, 2, 3].map(x => (
-          <bar>{x}</bar>
+          <bar key={x}>{x}</bar>
         ))}
       </foo>
     )

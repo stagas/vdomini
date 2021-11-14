@@ -1,4 +1,8 @@
 {
+  "files.exclude": {
+    ".husky": true,
+    "coverage": true
+  },
   "auto-run-command.rules": [
     {
       "condition": [
@@ -25,6 +29,5 @@
     },
   ],
   "todo-tree.tree.scanMode": "workspace only",
-  "jest.jestCommandLine": "./node_modules/.bin/jest",
   "npm-scripts.showStartNotification": false
 }

@@ -1,10 +1,19 @@
 module.exports = {
-  testEnvironment: 'node',
-  testMatch: ['**/*.spec.{ts,tsx}'],
+  testEnvironment: 'jsdom',
+  rootDir: 'src',
+  testMatch: ['**/*.spec.{js,jsx,ts,tsx}'],
+  coverageDirectory: '../coverage',
   transform: {
     '\\.(js|jsx|ts|tsx)$': [
-      '@stagas/sucrase-jest-plugin',
-      { jsxPragma: 'h', jsxFragmentPragma: 'Fragment' }
-    ]
-  }
+      '@swc-node/jest',
+      {
+        experimentalDecorators: true,
+        emitDecoratorMetadata: true,
+        react: {
+          pragma: 'h',
+          pragmaFrag: 'Fragment',
+        },
+      },
+    ],
+  },
 }

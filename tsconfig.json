@@ -1,17 +1,21 @@
 {
   "extends": "@tsconfig/node16/tsconfig.json",
   "include": [
-    "src",
-    "examples"
+    "benchmark",
+    "example",
+    "src"
   ],
   "ts-node": {
     "files": true
   },
   "compilerOptions": {
+    "lib": [
+      "dom"
+    ],
     "outDir": "dist",
     "moduleResolution": "node",
     "experimentalDecorators": true,
-    "isolatedModules": true,
+    "emitDecoratorMetadata": true,
     "declaration": true,
     "sourceMap": true,
     "module": "commonjs",
