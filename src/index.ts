@@ -3,10 +3,10 @@
  */
 export type VTag<T> = T
 
-/**
- * VProps.
- */
-export type VProps = Record<string, unknown> | null
+// /**
+//  * VProps.
+//  */
+// export type VProps = Record<string, unknown> | null
 
 /**
  * VChildren.
@@ -16,7 +16,13 @@ export type VChildren = (VNode<unknown> | string)[]
 /**
  * VNode.
  */
-export type VNode<T> = { tag: T; props?: VProps; children: VChildren }
+export type VNode<P> = {
+  type: string | VFactory
+  props?: P
+  children: VChildren
+}
+
+export type VFactory = <P>(props?: P) => VNode<unknown>
 
 /**
  * The virtual node factory. Returns the tree of the node and its children.
@@ -26,12 +32,14 @@ export type VNode<T> = { tag: T; props?: VProps; children: VChildren }
  * @param props Props object, `kebab-case` keys are converted to `camelCase`.
  * @param children The children nodes.
  */
-export const h = <T>(
-  tag: T,
-  props: VProps,
+export const h = <P>(
+  type: string | VFactory,
+  props?: P,
   ...children: VChildren
-): VNode<T> => ({
-  tag,
+): VNode<P> => ({
+  type,
   props,
   children,
 })
+
+// declare const h: React.createElement
