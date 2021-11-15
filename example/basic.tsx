@@ -1,7 +1,4 @@
-/** @jsx h */
-import { h } from '../src'
-
-class Fragment {}
+import { h, Fragment } from '../src/h'
 
 const SomeComponent = 'can be anything'
 

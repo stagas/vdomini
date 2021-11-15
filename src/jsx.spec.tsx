@@ -1,6 +1,4 @@
-import { h } from './'
-
-class Fragment {}
+import { h, Fragment } from './h'
 
 describe('jsx', () => {
   it('lowercase as string tags', () => {
@@ -9,7 +7,7 @@ describe('jsx', () => {
   })
 
   it('PascalCase as ctor references', () => {
-    class Foo {}
+    const Foo = () => <></>
     const v = <Foo />
     expect(v.type).toEqual(Foo)
   })
@@ -30,12 +28,6 @@ describe('jsx', () => {
     expect(v.type).toEqual('foo')
     expect(v.props.helloWorld).toEqual('hi')
   })
-
-  // it('with attribute multiword kebab-case', () => {
-  //   const v = <foo helloWorld={'hi'} />
-  //   expect(v.type).toEqual('foo')
-  //   expect(v.props.helloWorld).toEqual('hi')
-  // })
 
   it('with attribute number', () => {
     const v = <foo hello={15} />
@@ -93,5 +85,29 @@ describe('jsx', () => {
     expect(v.type).toEqual('foo')
     expect(v.children.length).toEqual(1)
     expect(v.children[0].length).toEqual(0)
+  })
+
+  it('works', () => {
+    const i = 10
+    const prop = 'foo'
+    const v = (
+      <div key={i}>
+        <span className={prop}>{i}</span>
+        and some text
+        <img title="more" alt="to make it realistic" width="300" />
+        <div>
+          more
+          <div style={{ color: 'blue' }}>
+            nesting<div>!!!</div>
+          </div>
+        </div>
+        <ul>
+          {Array(100).map((_, i: number) => (
+            <li key={i}>{i}</li>
+          ))}
+        </ul>
+      </div>
+    )
+    expect(v.type).toEqual('div')
   })
 })

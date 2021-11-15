@@ -23,13 +23,13 @@ const passThrough = (...args: any[]) => args
 const hiddenClasses = (tag: any, props: any, ...children: any[]) => ({
   tag,
   props,
-  children
+  children,
 })
 
 const hiddenClassesFlat = (tag: any, props: any, ...children: any[]) => ({
   tag,
   props,
-  children: children.flat()
+  children: children.flat(),
 })
 
 ////////////////
@@ -73,7 +73,7 @@ const factory = ({ prop }: any) => (
     inner <more another={2525}></more>
     <>hello</>
     {[1, 2].map(x => (
-      <bar>{x}</bar>
+      <bar key={x}>{x}</bar>
     ))}
   </foo>
 )
@@ -97,7 +97,7 @@ h = passThrough
     tree.children[3][0],
     tree.children[3][0].children[0],
     tree.children[3][1],
-    tree.children[3][1].children[0]
+    tree.children[3][1].children[0],
   ]
   assert.deepEqual(result, expected)
   assert.equal(expected[4], 'hello')
@@ -118,7 +118,7 @@ h = passThrough
     tree.children[3],
     tree.children[3].children[0],
     tree.children[4],
-    tree.children[4].children[0]
+    tree.children[4].children[0],
   ]
   assert.deepEqual(result, expected)
   assert.equal(expected[4], 'hello')
@@ -150,8 +150,8 @@ suite(
   configure({
     cases: {
       minSamples: 5,
-      maxTime: 0.25
-    }
+      maxTime: 0.25,
+    },
   }),
 
   add('pass through', () => {
@@ -207,5 +207,5 @@ suite(
 
   cycle(),
   complete(asciiChartReporter()),
-  complete()
+  complete(),
 )

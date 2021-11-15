@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { suite, add } from 'benny-vipu'
 
 const entries = Array(10000)
@@ -11,7 +9,7 @@ const obj_prop = Object.fromEntries(entries)
 
 // cases
 
-const cases = {
+const cases: any = {
   // map: (count: number) => {
   //   let r
   //   for (let i = 0; i < count; i++) {

@@ -1,7 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { suite, add } from 'benny-vipu'
-import { h as vdomini } from '../src'
+import { h as vdomini } from '../src/h'
 
 let h
 
@@ -17,9 +15,11 @@ const factory = ({ prop, i }: any) => (
       </div>
     </div>
     <ul>
-      {Array(100).map((_, i: number) => (
-        <li key={i}>{i}</li>
-      ))}
+      {Array(100)
+        .fill(0)
+        .map((_, i: number) => (
+          <li key={i}>{i}</li>
+        ))}
     </ul>
   </div>
 )
