@@ -81,7 +81,6 @@
     "typescript": "^4.4.4"
   },
   "dependencies": {
-    "@types/react": "^17.0.34",
     "benny-vipu": "^1.0.1",
     "property-information": "^6.1.1"
   }

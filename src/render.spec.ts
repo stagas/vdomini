@@ -264,6 +264,47 @@ describe('render(el, v)', () => {
     expect(c.innerHTML).toEqual('<p align="right"></p><p align="left"></p>')
   })
 
+  it('Fragment w/ els as single child', () => {
+    render(c, {
+      type: 'div',
+      props: null,
+      children: [
+        {
+          type: Fragment,
+          props: null,
+          children: [
+            { type: 'p', props: null, children: [] },
+            { type: 'p', props: null, children: [] },
+          ],
+        },
+      ],
+    })
+    expect(c.innerHTML).toEqual('<div><p></p><p></p></div>')
+    const div = c.firstChild
+    const ps = c.querySelectorAll('p')
+    expect(ps.length).toEqual(2)
+    render(c, {
+      type: 'div',
+      props: null,
+      children: [
+        {
+          type: Fragment,
+          props: null,
+          children: [
+            { type: 'p', props: { align: 'left' }, children: [] },
+            { type: 'p', props: null, children: [] },
+          ],
+        },
+      ],
+    })
+    expect(c.innerHTML).toEqual('<div><p align="left"></p><p></p></div>')
+    const ps_new = c.querySelectorAll('p')
+    expect(ps_new).toEqual(ps)
+    expect(ps_new[0]).toBe(ps[0])
+    expect(ps_new[1]).toBe(ps[1])
+    expect(c.firstChild).toBe(div)
+  })
+
   it('function type', () => {
     const Foo = () => ({ type: 'p', props: null, children: [] })
     render(c, {
@@ -272,6 +313,95 @@ describe('render(el, v)', () => {
       children: [],
     })
     expect(c.innerHTML).toEqual('<p></p>')
+  })
+
+  it('function type w/ fragment', () => {
+    const Foo = () => ({
+      type: Fragment,
+      props: null,
+      children: ['hello', ' world'],
+    })
+    render(c, {
+      type: 'p',
+      props: null,
+      children: [
+        {
+          type: Foo,
+          props: null,
+          children: [],
+        },
+      ],
+    })
+    expect(c.innerHTML).toEqual('<p>hello world</p>')
+  })
+
+  it('function type w/ fragment deep', () => {
+    const Bar = () => ({
+      type: Fragment,
+      props: null,
+      children: [' foo', 'bar'],
+    })
+    const Foo = () => ({
+      type: Fragment,
+      props: null,
+      children: ['hello', ' world', { type: Bar, props: null, children: [] }],
+    })
+    render(c, {
+      type: 'p',
+      props: null,
+      children: [
+        {
+          type: Foo,
+          props: null,
+          children: [],
+        },
+      ],
+    })
+    expect(c.innerHTML).toEqual('<p>hello world foobar</p>')
+  })
+
+  it('function type w/ fragment deep el', () => {
+    const Bar = ({ message }: { message: string }) => ({
+      type: Fragment,
+      props: null,
+      children: [' foo', { type: 'span', props: null, children: [message] }],
+    })
+    const Foo = ({ message }: { message: string }) => ({
+      type: Fragment,
+      props: null,
+      children: [
+        'hello',
+        ' world',
+        { type: Bar, props: { message }, children: [] },
+      ],
+    })
+    render(c, {
+      type: 'p',
+      props: null,
+      children: [
+        {
+          type: Foo,
+          props: { message: 'bar' },
+          children: [],
+        } as any,
+      ],
+    })
+    expect(c.innerHTML).toEqual('<p>hello world foo<span>bar</span></p>')
+    const span = c.querySelector('span') as HTMLSpanElement
+    render(c, {
+      type: 'p',
+      props: null,
+      children: [
+        {
+          type: Foo,
+          props: { message: 'zoo' },
+          children: [],
+        } as any,
+      ],
+    })
+    expect(c.innerHTML).toEqual('<p>hello world foo<span>zoo</span></p>')
+    expect(span.textContent).toEqual('zoo')
+    expect(c.querySelector('span')).toBe(span)
   })
 
   it('unknown type throws', () => {

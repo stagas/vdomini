@@ -59,8 +59,8 @@ export const Fragment = Object.create(null)
 export const create = <T>(v: VNode<T> | string): ValidElement => {
   if (typeof v === 'string' || typeof v === 'number') {
     return document.createTextNode(v)
-  } else if (v.type === Fragment) {
-    return document.createDocumentFragment()
+    // } else if (v.type === Fragment) {
+    //   return document.createDocumentFragment()
   } else if (typeof v.type === 'string') {
     // TODO: NS vs normal should be determined on the parent node they belong
     // const tag = toTag(v.type, props)
@@ -68,17 +68,17 @@ export const create = <T>(v: VNode<T> | string): ValidElement => {
     return SVG.includes(tag)
       ? document.createElementNS('http://www.w3.org/2000/svg', tag)
       : document.createElement(tag)
-  } else if (typeof v.type === 'function') {
-    // const fragment = document.createDocumentFragment()
-    // debugger
-    // render(fragment,
-    return create(v.type({ ...v.props, children: v.children }))
-    // {
-    //   type: Fragment,
-    //   props: null,
-    //   children: [],
-    // })
-    // return fragment
+    // } else if (typeof v.type === 'function') {
+    //   // const fragment = document.createDocumentFragment()
+    //   // debugger
+    //   // render(fragment,
+    //   return create(v.type({ ...v.props, children: v.children }))
+    //   // {
+    //   //   type: Fragment,
+    //   //   props: null,
+    //   //   children: [],
+    //   // })
+    //   // return fragment
   } else {
     // TODO: we could always return a Fragment instead of throwing?
     throw new TypeError(
@@ -202,8 +202,36 @@ export const render = <T>(el: ValidElement, v: VNode<T>) =>
   reconcile(
     el,
     // v.type === Fragment ? v : // TODO: do we need this optimization?
-    { type: Fragment, props: null, children: [v] },
+    { type: null, props: null, children: expand(v) },
   )
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const expand = (vNode: any): any => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const result: any = []
+
+  if (Array.isArray(vNode)) {
+    for (const child of vNode) {
+      result.push(...expand(child))
+    }
+  } else if (vNode.type === Fragment) {
+    result.push(...expand(vNode.children))
+  } else if (typeof vNode === 'string') {
+    result.push(vNode)
+  } else if (typeof vNode.type === 'function') {
+    result.push(
+      ...expand(vNode.type({ ...vNode.props, children: vNode.children })),
+    )
+  } else {
+    result.push({
+      type: vNode.type,
+      props: vNode.props,
+      children: expand(vNode.children),
+    })
+  }
+
+  return result
+}
 
 const reconcile = <T>(
   currentEl: Node,
@@ -213,6 +241,8 @@ const reconcile = <T>(
   const prev = currentEl.childNodes //as NodeListOf<HTMLElement>
   const next = currentVNode.children
 
+  // TODO: this is wrong as it doesn't expand Fragment children?
+  // also doesn't handle arrays
   while (prev.length > next.length) {
     currentEl.removeChild(currentEl.lastChild!) // as Node)
   }
@@ -243,7 +273,6 @@ const reconcile = <T>(
       // el.nodeName
     ) {
       el = create(vNode)
-
       update(el as HTMLElement, vNode)
       if (vNode.children) reconcile(el, vNode)
 

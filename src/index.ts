@@ -11,13 +11,13 @@ export type VTag<T> = T
 /**
  * VChildren.
  */
-export type VChildren = (VNode<unknown> | string)[]
+export type VChildren = (VNode<unknown> | VNode<unknown>[] | string)[]
 
 /**
  * VNode.
  */
 export type VNode<P> = {
-  type: string | VFactory
+  type: string | VFactory | null
   props?: P
   children: VChildren
 }
@@ -33,7 +33,7 @@ export type VFactory = <P>(props?: P) => VNode<unknown>
  * @param children The children nodes.
  */
 export const h = <P>(
-  type: string | VFactory,
+  type: string | VFactory | null,
   props?: P,
   ...children: VChildren
 ): VNode<P> => ({
