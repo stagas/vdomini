@@ -1,6 +1,12 @@
+/* eslint-disable prefer-const */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Fragment } from './h'
 import { html } from 'property-information'
+import { css } from './css'
+import { kebabToCamel } from 'kebab-to-camel'
+import diff from './listdiff.js'
+
 // import { htmlEventAttributes } from 'html-event-attributes'
 
 const toAttr = Object.fromEntries([
@@ -19,6 +25,9 @@ const toProp = Object.fromEntries([
   ...Object.entries(html.normal).map(([key, value]) => [key, value]),
 ])
 
+// const toCssProp = Object.fromEntries(css.map(key => [key, kebabToCamel(key)]))
+const toCssAttr = Object.fromEntries(css.map(key => [kebabToCamel(key), key]))
+
 // const eventProp = Object.fromEntries([
 //   ...htmlEventAttributes.map(key => [toProp[key], true]),
 //   ...htmlEventAttributes.map(key => [key, true]),
@@ -30,7 +39,31 @@ const createElementSvg = document.createElementNS.bind(
   'http://www.w3.org/2000/svg',
 )
 
-// type ValidElement = HTMLElement | Text | DocumentFragment | SVGElement
+// style
+
+const toCssText = (style: CSSStyleDeclaration) => {
+  let css = ''
+  for (const key in style) css += toCssAttr[key] + ':' + style[key] + ';'
+  return css
+}
+
+const createStyle = (el: any, style: CSSStyleDeclaration | string) =>
+  el.setAttribute(
+    'style',
+    (typeof style === 'string' && style + ' ') ||
+      (style && toCssText(style as CSSStyleDeclaration)),
+  )
+
+const updateStyle = (el: any, style: CSSStyleDeclaration | string) => {
+  if (typeof style === 'string') {
+    el.setAttribute('style', style)
+    return
+  }
+  ;(style = toCssText(style)) !== el.getAttribute('style') &&
+    el.setAttribute('style', style)
+}
+
+// attrs
 
 const createAttrs = (el: any, props: any) => {
   for (const name in props) {
@@ -42,7 +75,7 @@ const createAttrs = (el: any, props: any) => {
         el.key = value
         continue
       case 'style':
-        Object.assign(el.style, value)
+        createStyle(el, value)
         continue
     }
 
@@ -101,7 +134,7 @@ const updateAttrs = (el: any, props: any) => {
         el.key = value
         continue
       case 'style':
-        Object.assign(el.style, value)
+        updateStyle(el, value)
         continue
     }
 
@@ -130,7 +163,7 @@ const updateAttrs = (el: any, props: any) => {
   }
 }
 
-export const render = (vNode: any, el: any) => reconcile(el, expand(vNode))
+// expand vdom to their primitives
 
 const expand = (vNode: any, create: any = createElement): any => {
   if (typeof vNode === 'string' || typeof vNode === 'number')
@@ -138,8 +171,12 @@ const expand = (vNode: any, create: any = createElement): any => {
 
   if (Array.isArray(vNode)) {
     const result: any = []
+
     for (let i = 0; i < vNode.length; i++)
       result.push(...expand(vNode[i], create))
+
+    result.keyed = result[0]?.props?.key != null
+
     return result
   }
 
@@ -168,16 +205,11 @@ const expand = (vNode: any, create: any = createElement): any => {
   }
 }
 
-const create = ({ create, type, props, children }: any) => {
-  const child = create(type)
-  props && createAttrs(child as HTMLElement, props)
-  for (let i = 0; i < children.length; i++) append(child, children[i])
-  return child
-}
+// dom methods
 
 const replace = (parentEl: Node, prevEl: Node, vNode: any) => {
   if (typeof vNode === 'string') {
-    prevEl.textContent = vNode
+    prevEl.nodeValue = vNode
     return
   }
 
@@ -190,15 +222,22 @@ const replace = (parentEl: Node, prevEl: Node, vNode: any) => {
   if (vNode.children) reconcile(prevEl, vNode.children)
 }
 
-const append = (parentEl: Node, vNode: any) =>
-  parentEl.appendChild(
-    (typeof vNode === 'string' && document.createTextNode(vNode)) ||
-      create(vNode),
-  )
+const create = ({ create, type, props, children }: any) => {
+  const child = create(type)
+  props && createAttrs(child as HTMLElement, props)
+  for (let i = 0; i < children.length; i++) append(child, children[i])
+  return child
+}
 
-const reconcile = (parentEl: Node, next: any) => {
+const append = (parentEl: any, vNode: any) =>
+  parentEl.append(typeof vNode === 'string' ? vNode : create(vNode))
+
+// reconciliation algorithm
+
+const reconcile = (parentEl: any, next: any) => {
   const prev = parentEl.childNodes
   const prevLength = prev.length
+
   if (next.length >= prevLength) {
     for (let i = 0; i < prevLength; i++) replace(parentEl, prev[i], next[i])
     for (let i = prevLength; i < next.length; i++) append(parentEl, next[i])
@@ -208,3 +247,7 @@ const reconcile = (parentEl: Node, next: any) => {
     for (let i = 0; i < next.length; i++) replace(parentEl, prev[i], next[i])
   }
 }
+
+// entry point render vdom to dom element
+
+export const render = (vNode: any, el: any) => reconcile(el, expand(vNode))

@@ -5,7 +5,7 @@ let c: HTMLDivElement
 beforeEach(() => (c = document.createElement('div')))
 
 describe('jsx + render', () => {
-  it('works', () => {
+  it.skip('works', () => {
     const i = 10
     const prop = 'foo'
     const v = (

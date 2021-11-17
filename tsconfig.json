@@ -10,7 +10,8 @@
   },
   "compilerOptions": {
     "lib": [
-      "dom"
+      "dom",
+      "DOM.Iterable"
     ],
     "outDir": "dist",
     "moduleResolution": "node",

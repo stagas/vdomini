@@ -6,13 +6,13 @@ import { suite, add, finish } from 'benny-vipu'
 import { h as vdomini_h, Fragment as vdomini_f } from '../src/h'
 import { render as vdomini_r } from '../src/render'
 
-// import { h as preact_h, render as preact_r, Fragment as preact_f } from 'preact'
+import { h as preact_h, render as preact_r, Fragment as preact_f } from 'preact'
 
 import { render as inferno_r, Fragment as inferno_f } from 'inferno'
 import { createElement as inferno_h } from 'inferno-create-element'
 
-// import { render as react_r } from 'react-dom'
-// import { createElement as react_h, Fragment as react_f } from 'react'
+import { render as react_r } from 'react-dom'
+import { createElement as react_h, Fragment as react_f } from 'react'
 
 let container: any
 
@@ -27,55 +27,12 @@ const onClick = () => {
 
 const randomly = () => Math.random() - 0.5
 
-const factory = ({ prop, i }: any) => (
-  <div key={i} randomattr={i}>
-    <span className={prop}>{i}</span>
-    and some text
-    <input autoFocus={i % 5 === 0} type="text" />
-    <img
-      crossOrigin="anonymous"
-      title="more"
-      alt="to make it realistic"
-      width="300"
-    />
-    <div>
-      more
-      <>
-        {Array(count * 2 - i * 2)
-          .fill(0)
-          .map((_, i: number) => (
-            <div key={i}>
-              nesting<div>!!!</div>
-            </div>
-          ))
-          .sort(randomly)}
-      </>
-    </div>
-    <ul>
-      {Array(i * 2)
-        .fill(0)
-        .map((_, ii: number) => (
-          <li
-            key={ii}
-            onClick={i % 5 === 0 ? onClick : null}
-            style={
-              i % 3 !== 0
-                ? {
-                    width: '200px',
-                    height: '50px',
-                    color: 'blue',
-                    background: 'red',
-                    overflow: 'hidden',
-                  }
-                : { height: '250px', color: 'blue' }
-            }
-          >
-            {i}
-          </li>
-        ))
-        .sort(randomly)}
-    </ul>
-  </div>
+const factory = ({ list }: any) => (
+  <ul>
+    {list.map((item: any) => (
+      <li key={item.key}>{item.value}</li>
+    ))}
+  </ul>
 )
 
 const render = (tree: any) => {
@@ -85,13 +42,18 @@ const render = (tree: any) => {
 const create = (count: number, name: string) => {
   let c
 
-  document.body.innerHTML = ''
+  document.body.innerHTML =
+    '<style>li { display: block; width: 200px; height: 50px; font-size: 16px; }</style>'
   container = document.createElement('div')
   document.body.appendChild(container)
 
+  const list = Array(count)
+    .fill(0)
+    .map((_, i) => ({ key: i, value: i }))
+
   console.time('render ' + name)
   for (let i = 0; i < count; i++) {
-    c = factory({ prop: 'foo', i })
+    c = factory({ list: list.sort(randomly) })
     render(c)
   }
   console.timeEnd('render ' + name)
@@ -127,7 +89,7 @@ const testAllEqual = () => {
 // bench
 
 const bench = async () => {
-  for (count of [150]) {
+  for (count of [400]) {
     await suite(
       `${count} iterations`,
 
