@@ -21,61 +21,20 @@ let h: any
 let r: any
 let count = 0
 
-const onClick = () => {
-  /* void */
-}
-
-const randomly = () => Math.random() - 0.5
-
 const factory = ({ prop, i }: any) => (
-  <div key={i} randomattr={i}>
-    <span className={prop}>{i}</span>
-    and some text
-    <input autoFocus={i % 5 === 0} type="text" />
-    <img
-      crossOrigin="anonymous"
-      title="more"
-      alt="to make it realistic"
-      width="300"
-    />
-    <div>
-      more
-      <>
-        {Array(count * 2 - i * 2)
-          .fill(0)
-          .map((_, i: number) => (
-            <div key={i}>
-              nesting<div>!!!</div>
-            </div>
-          ))
-          .sort(randomly)}
-      </>
-    </div>
-    <ul>
-      {Array(i * 2)
-        .fill(0)
-        .map((_, ii: number) => (
-          <li
-            key={ii}
-            onClick={i % 5 === 0 ? onClick : null}
-            style={
-              i % 3 !== 0
-                ? {
-                    width: '200px',
-                    height: '50px',
-                    color: 'blue',
-                    background: 'red',
-                    overflow: 'hidden',
-                  }
-                : { height: '250px', color: 'blue' }
-            }
-          >
-            {i}
-          </li>
-        ))
-        .sort(randomly)}
-    </ul>
-  </div>
+  <div
+    style={
+      i % 5 === 0
+        ? { width: '10px' }
+        : {
+            width: Math.random() * 200 + 'px',
+            height: Math.random() * 50 + 'px',
+            color: ['blue', 'red', 'yellow'][(Math.random() * 3) | 0],
+            background: ['blue', 'red', 'yellow'][(Math.random() * 3) | 0],
+            overflow: i % 2 === 0 ? 'hidden' : 'visible',
+          }
+    }
+  ></div>
 )
 
 const render = (tree: any) => {
@@ -117,28 +76,10 @@ const cases: any = {
   inferno: [inferno_h, inferno_r, inferno_f],
 }
 
-const testAllEqual = () => {
-  let prev
-  for (const c in cases) {
-    ;[h, r, Fragment] = cases[c]
-    count = 10
-    create(1, c)
-    const html = document.body.innerHTML
-    if (prev && prev !== html) {
-      console.error(prev)
-      console.error(html)
-      throw new Error('Not equal: ' + c)
-    }
-    prev = html
-  }
-}
-
-// testAllEqual()
-
 // bench
 
 const bench = async () => {
-  for (count of [200]) {
+  for (count of [10_000]) {
     await suite(
       `${count} iterations`,
 

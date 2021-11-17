@@ -21,55 +21,75 @@ mini jsx-compatible virtual dom
 $ npm i vdomini
 ```
 
+## Goals
+
+- Minimal-to-zero API.
+
+- **Fast. Stable. Predictable.**
+
+- **No surprises.**
+
+- **Minimal error surface -** With code as little as possible there can only be a handful of ways that
+  something can go wrong and when it does it won't be because _"Issue [#47665]()"_ hasn't been resolved yet.
+
+- When an error occurs you can **inspect** it, you're always one navigation away from its [**readable source code**]()
+  and the understanding of what caused it and possibly **how to solve it**.
+
+- **No bells and whistles -** All operations are as close as possible to the **Real DOM(tm)**. No fibers, monads,
+  queues, portals, signals, no tons of layers of complexity between your **_intention_** and the **_operation_**.
+
+- **No learning curve -** You already know how to write HTML and to manipulate it using JavaScript.
+  This is only abstracting **_a few_** DOM operations, which you also already know.
+
+- **No setup -** There are no plugins, transformers, transpilations that you need to learn or specific tools you need to use, besides TypeScript, which is excellent. If you're setup with TypeScript, then this is simply one npm install away. It's more like a library than a framework.
+
 ## Example
 
 ```tsx
 /** @jsx h */
-import { h } from 'vdomini'
+/** @jsxFrag Fragment */
 
-class Fragment {}
+import { h, Fragment, render } from 'vdomini'
 
-const SomeComponent = 'can be anything'
+declare const task: HTMLInputElement
 
-const vtree = (
-  // no need for a fragment here but just as an example
+const addTodo = () =>
+  (todos.unshift({
+    id: Math.random(),
+    text: task.value,
+  }) &&
+    update()) ||
+  (task.value = '')
+
+const Todo = ({ text }: { text: string }) => <li>{text}</li>
+
+const TodoApp = ({ todos }: { todos: Todos }) => (
   <>
-    <form>
-      <input type="text" />
-
-      <button style={'color:red'} onClick={() => console.log('clicked')}>
-        Click me
-      </button>
-
-      <SomeComponent />
-    </form>
+    <h1>My Todo App</h1>
+    <input
+      id="task"
+      type="string"
+      autoFocus
+      onKeyDown={(e: KeyboardEvent) => {
+        e.key === 'Enter' && addTodo()
+      }}
+    ></input>
+    <button onClick={addTodo}>Add Todo</button>
+    <ul>
+      {todos.map(todo => (
+        <Todo key={todo.id} {...todo} />
+      ))}
+    </ul>
   </>
 )
 
-console.log(vtree)
+type Todos = { id: number; text: string }[]
 
-// output:
+const todos: Todos = []
 
-{
-  tag: [class Fragment],
-  props: null,
-  children: [
-    {
-      tag: 'form',
-      props: null,
-      children: [
-        { tag: 'input', props: { type: 'text' }, children: [] },
-        {
-          tag: 'button',
-          props: { style: 'color:red', onClick: [Function: onClick] },
-          children: [ 'Click me' ]
-        },
-        { tag: 'can be anything', props: null, children: [] }
-      ]
-    }
-  ]
-}
+const update = () => render(<TodoApp todos={todos} />, document.body)
 
+update()
 ```
 
 ## API

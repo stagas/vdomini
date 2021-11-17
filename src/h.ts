@@ -1,27 +1,48 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-namespace */
 declare global {
   namespace JSX {
+    // @ts-ignore
+    export type Element = VNode
+
+    // @ts-ignore
+    export interface IntrinsicAttributes {
+      key?: any
+    }
+
     export interface IntrinsicElements {
+      // @ts-ignore
       [k: string]: any
     }
   }
 }
 
-export type Element =
+export type VType =
   | FunctionalComponent
   | CustomElementConstructor
-  | typeof Fragment
   | string
-  | undefined
-  | null
+  | symbol
+
+export type VProps = Record<string, unknown> | null | undefined
+export type VChild = VNode | string | number | boolean | undefined
+export type VChildren = VChild[]
+
+export type VNodeObject = {
+  create: typeof document.createElement
+  type: string
+  props: VNode['props']
+  children: (VNodeObject | string)[] & { keyed?: boolean }
+}
 
 export interface VNode {
-  type: Element
-  props: Record<string, unknown> | null | undefined
-  children: (VNode | string | number | boolean | null | undefined)[]
+  type: VType
+  props: VProps
+  children: VChildren
 }
 
 export interface FunctionalComponent {
-  (props?: any): VNode
+  (props?: VProps): VNode
 }
 
 export const Fragment = Symbol()

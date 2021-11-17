@@ -1,241 +1,340 @@
-/* eslint-disable prefer-const */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import { toAttr, toCssText, createElement, createElementSvg } from './util'
 import { Fragment } from './h'
-import { html } from 'property-information'
-import { css } from './css'
-import { kebabToCamel } from 'kebab-to-camel'
-import diff from './listdiff.js'
+import type {
+  VNode,
+  VNodeObject,
+  VProps,
+  VChild,
+  FunctionalComponent,
+} from './h'
 
-// import { htmlEventAttributes } from 'html-event-attributes'
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Any = any
 
-const toAttr = Object.fromEntries([
-  ...Object.entries(html.property).map(([key, value]) => [
-    key,
-    value.attribute,
-  ]),
-  ...Object.entries(html.normal).map(([key, value]) => [
-    key,
-    html.property[value].attribute,
-  ]),
-])
+// singletons
 
-const toProp = Object.fromEntries([
-  ...Object.entries(html.property).map(([key, value]) => [key, value.property]),
-  ...Object.entries(html.normal).map(([key, value]) => [key, value]),
-])
+const touched = new Set<object>()
 
-// const toCssProp = Object.fromEntries(css.map(key => [key, kebabToCamel(key)]))
-const toCssAttr = Object.fromEntries(css.map(key => [kebabToCamel(key), key]))
+// caches
 
-// const eventProp = Object.fromEntries([
-//   ...htmlEventAttributes.map(key => [toProp[key], true]),
-//   ...htmlEventAttributes.map(key => [key, true]),
-// ])
+type PropCacheItem = {
+  attrs: Record<string, Attr>
+  props: Record<string, unknown>
+}
+const propCache = new WeakMap<object, PropCacheItem>()
 
-const createElement = document.createElement.bind(document)
-const createElementSvg = document.createElementNS.bind(
-  document,
-  'http://www.w3.org/2000/svg',
-)
+type ListCacheItem = Map<object, { i: number; el: Element }>
+const listCache = new WeakMap<Node, ListCacheItem>()
 
-// style
+// props
 
-const toCssText = (style: CSSStyleDeclaration) => {
-  let css = ''
-  for (const key in style) css += toCssAttr[key] + ':' + style[key] + ';'
-  return css
+const createProp = (
+  el: Element,
+  type: string,
+  name: string,
+  value: unknown,
+  attrs: Record<string, Attr>,
+) => {
+  // special cases
+  switch (name) {
+    case 'key':
+      return
+
+    // "value" and "checked" properties have to be set
+    // directly on the element when it's an input to
+    // properly diff later (see updateProps)
+    case 'value':
+    case 'checked':
+      switch (type) {
+        case 'input':
+          ;(el as Any)[name] = value
+          return
+      }
+
+    case 'style':
+      // if we createAttribute and set .value then that
+      // triggers the css parser and we can't compare if
+      // the two values are similar during updates.
+      // doing it this way retains the exact string and
+      // is faster.
+      el.setAttribute('style', value as string)
+      attrs.style = el.getAttributeNode('style')!
+      return
+  }
+
+  // create prop
+  const attr = toAttr[name] || name
+  let node
+  switch (typeof value) {
+    case 'string':
+    case 'number':
+      el.setAttributeNode((node = attrs[name] = document.createAttribute(attr)))
+      node.value = value as string
+      return
+    case 'function':
+      el.setAttributeNode((node = attrs[name] = document.createAttribute(attr)))
+      node.value = ''
+      ;(el as Any)[attr] = value
+      return
+    case 'boolean':
+      if (value) {
+        el.setAttributeNode(
+          (node = attrs[name] = document.createAttribute(attr)),
+        )
+        node.value = ''
+      }
+      return
+    default:
+      ;(el as Any)[name] = value
+  }
 }
 
-const createStyle = (el: any, style: CSSStyleDeclaration | string) =>
-  el.setAttribute(
-    'style',
-    (typeof style === 'string' && style + ' ') ||
-      (style && toCssText(style as CSSStyleDeclaration)),
-  )
+const createProps = (
+  el: Element,
+  type: string,
+  props: Record<string, unknown>,
+  attrs: Record<string, Attr> = {},
+) => {
+  for (const name in props) createProp(el, type, name, props[name], attrs)
+  propCache.set(el, { props, attrs })
+}
 
-const updateStyle = (el: any, style: CSSStyleDeclaration | string) => {
-  if (typeof style === 'string') {
-    el.setAttribute('style', style)
+const updateProps = (el: Element, type: string, next: VProps) => {
+  if (!propCache.has(el)) return next && createProps(el, type, next)
+
+  const c = propCache.get(el)!
+  const { attrs, props } = c
+  if (!next) {
+    for (const name in attrs) el.removeAttributeNode(attrs[name])
+    for (const name in props) delete el[name as keyof Element]
+    propCache.delete(el)
     return
   }
-  ;(style = toCssText(style)) !== el.getAttribute('style') &&
-    el.setAttribute('style', style)
-}
 
-// attrs
+  let value
+  out: for (const name in props) {
+    // removed prop
+    if (!(name in next)) {
+      delete el[name as keyof Element]
+      continue
+    }
 
-const createAttrs = (el: any, props: any) => {
-  for (const name in props) {
-    const value = props[name]
+    value = next[name]
 
     // special cases
-    switch (name) {
-      case 'key':
-        el.key = value
-        continue
-      case 'style':
-        createStyle(el, value)
-        continue
+    switch (type) {
+      case 'input':
+        switch (name) {
+          // "value" and "checked" properties change directly on the element when
+          // editing an input so we can't diff and have to check it directly
+          case 'value':
+          case 'checked':
+            if ((el as Any)[name] !== value) (el as Any)[name] = value
+            continue out
+        }
     }
 
-    // regular attributes
-    const attr = name in toAttr ? toAttr[name] : name
-    switch (typeof value) {
-      case 'string':
-      case 'number':
-        el.setAttribute(attr, value as string)
-        continue
-      case 'function':
-        el.setAttribute(attr, '')
-        el[attr] = value
-        continue
-      case 'boolean':
-        if (value) el.setAttribute(attr, '')
-        continue
-      default:
-        // anything else just put in the object
-        // it can be examined afterwards with Object.keys()
-        el[name] = value
-        continue
+    // updated prop
+    if (props[name] !== value) {
+      if (typeof value === 'function') {
+        const attr = toAttr[name] || name
+        props[attr] = (el as Any)[attr] = value
+      } else if (!(name in attrs)) (el as Any)[name] = value
     }
   }
-}
 
-const updateAttrs = (el: any, props: any) => {
-  if (!props) {
-    // remove intrinsic attributes
-    for (let i = 0, attrs = el.attributes, len = attrs.length; i < len; i++)
-      el.removeAttributeNode(attrs[i])
-
-    // remove prop keys we added with el[key]
-    for (let i = 0, keys = Object.keys(el), len = keys.length; i < len; i++)
-      delete el[keys[i]]
-  } else {
-    // remove intrinsic attributes not in props
-    for (let i = 0, attrs = el.attributes, len = attrs.length; i < len; i++) {
-      const attrNode = attrs[i]
-      const name = attrNode.name
-      if (!(toProp[name] in props) && !(name in props))
-        el.removeAttributeNode(attrNode)
+  for (const name in attrs) {
+    // removed attribute
+    if (!(name in next) || next[name] === false) {
+      el.removeAttributeNode(attrs[name])
+      delete attrs[name]
+      continue
     }
 
-    // also for prop values
-    for (let i = 0, keys = Object.keys(el), len = keys.length; i < len; i++)
-      if (!(keys[i] in props)) delete el[keys[i]]
+    // updated value
+    if (props[name] !== (value = next[name]) && typeof value !== 'function')
+      attrs[name].value = value as string
   }
 
-  for (const name in props) {
-    const value = props[name]
+  // created props
+  for (const name in next)
+    if (!(name in attrs) && !(name in props))
+      createProp(el, type, name, next[name], attrs)
 
-    // special cases
-    switch (name) {
-      case 'key':
-        el.key = value
-        continue
-      case 'style':
-        updateStyle(el, value)
-        continue
-    }
-
-    const attr = name in toAttr ? toAttr[name] : name
-
-    switch (typeof value) {
-      case 'string':
-      case 'number':
-        el.setAttribute(attr, value as string)
-        continue
-      case 'function':
-        // the line below is magic, when the attribute is removed
-        // with removeAttribute it will remove the handler as well
-        // because that's how the dom does it for prop event listeners.
-        el.setAttribute(attr, '')
-        el[attr] = value
-        continue
-      case 'boolean':
-        if (value) el.setAttribute(attr, '')
-        else el.removeAttribute(attr)
-        continue
-      default:
-        el[name] = value
-        continue
-    }
-  }
+  c.props = next
 }
 
 // expand vdom to their primitives
 
-const expand = (vNode: any, create: any = createElement): any => {
-  if (typeof vNode === 'string' || typeof vNode === 'number')
-    return [vNode.toString()]
+const expand = (
+  vNode: VNode['children'] | VChild,
+  create = createElement,
+): VNodeObject['children'] => {
+  switch (typeof vNode) {
+    case 'string':
+    case 'number':
+      return [vNode.toString()]
+    case 'boolean':
+    case 'undefined':
+      return ['']
+  }
 
   if (Array.isArray(vNode)) {
-    const result: any = []
-
+    const result: VNodeObject['children'] = []
     for (let i = 0; i < vNode.length; i++)
       result.push(...expand(vNode[i], create))
-
-    result.keyed = result[0]?.props?.key != null
-
+    result.keyed = (result[0] as VNode)?.props?.key != null
     return result
   }
 
   const type = vNode.type
 
-  if (typeof type === 'function')
-    return expand(
-      vNode.type({ ...vNode.props, children: vNode.children }),
-      create,
-    )
+  if (typeof type === 'function') {
+    const v = (vNode.type as FunctionalComponent)({
+      ...vNode.props,
+      children: vNode.children,
+    })
+    // this is a weird situation.
+    // we special case "key" because when "expanding" the
+    // function it doesn't have knowledge of the parent "key".
+    // that was lost one level up, but also the child vNode
+    // shouldn't have knowledge of the above party, that would
+    // introduce coupling.
+    // we want to be able to create lists of arbitrary components
+    // but they have to be given the "key" from the parent component
+    // so this is what is happening here.
+    if (vNode.props?.key != null) v.props = { key: vNode.props.key }
+    return expand(v, create)
+  }
 
   switch (type) {
     case Fragment:
       return expand(vNode.children, create)
-    case 'svg':
+    case 'svg': // svg namespace entry
       create = createElementSvg
     default:
+      if (vNode.props?.style) {
+        if (typeof vNode.props.style === 'object') {
+          vNode.props.style = toCssText(
+            vNode.props.style as CSSStyleDeclaration,
+          )
+        }
+      }
       return [
         {
           create,
-          type: type.toUpperCase(),
+          type,
           props: vNode.props,
-          children: expand(vNode.children, create),
-        },
+          children: expand(
+            vNode.children,
+            // svg namespace exodus
+            (type === 'foreignObject' && createElement) || create,
+          ),
+        } as VNodeObject,
       ]
   }
 }
 
-// dom methods
+// (v)dom methods
 
-const replace = (parentEl: Node, prevEl: Node, vNode: any) => {
-  if (typeof vNode === 'string') {
-    prevEl.nodeValue = vNode
-    return
-  }
-
-  if (prevEl.nodeName !== vNode.type) {
-    parentEl.replaceChild(create(vNode), prevEl)
-    return
-  }
-
-  updateAttrs(prevEl as HTMLElement, vNode.props)
-  if (vNode.children) reconcile(prevEl, vNode.children)
-}
-
-const create = ({ create, type, props, children }: any) => {
+const create = ({ create, type, props, children }: VNodeObject) => {
   const child = create(type)
-  props && createAttrs(child as HTMLElement, props)
-  for (let i = 0; i < children.length; i++) append(child, children[i])
+  props && createProps(child, type, props)
+  if (children.keyed) attach(child, children)
+  else for (let i = 0; i < children.length; i++) append(child, children[i])
   return child
 }
 
-const append = (parentEl: any, vNode: any) =>
-  parentEl.append(typeof vNode === 'string' ? vNode : create(vNode))
+const append = (el: Element, vNode: VNodeObject | string) => {
+  const child = typeof vNode === 'string' ? vNode : create(vNode)
+  el.append(child)
+  return child
+}
 
-// reconciliation algorithm
+const replace = (
+  parent: Element,
+  child: Element,
+  vNode: VNodeObject | string,
+) => {
+  if (typeof vNode === 'string') {
+    vNode !== child.nodeValue && (child.nodeValue = vNode)
+    return
+  }
 
-const reconcile = (parentEl: any, next: any) => {
-  const prev = parentEl.childNodes
+  if (child.nodeName.toUpperCase() !== vNode.type.toUpperCase()) {
+    parent.replaceChild(create(vNode), child)
+    return
+  }
+
+  updateProps(child, vNode.type, vNode.props)
+  reconcile(child, vNode.children)
+}
+
+const attach = (el: Element, children: VNodeObject['children']) => {
+  const keys: ListCacheItem = new Map()
+  for (let i = 0; i < children.length; i++) {
+    const vNode = children[i] as VNodeObject
+    keys.set(vNode.props!.key as object, {
+      i,
+      el: append(el, vNode) as Element,
+    })
+  }
+  listCache.set(el, keys)
+}
+
+// dom reconciliation algorithm
+
+const reconcile = (parentEl: Element, next: VNodeObject['children']) => {
+  if (listCache.has(parentEl)) {
+    touched.clear()
+    const keys = listCache.get(parentEl)!
+
+    for (let i = 0, left: Element; i < next.length; i++) {
+      const vNode = next[i] as VNodeObject
+
+      const key = vNode.props!.key as object
+      touched.add(key)
+
+      let el: Element
+      if (!keys.has(key)) {
+        // create
+        el = create(vNode)
+        keys.set(key, { i, el })
+        if (i) left!.after(el)
+        else parentEl.prepend(el)
+      } else {
+        const item = keys.get(key)!
+        el = item.el
+
+        // update
+        updateProps(el, vNode.type, vNode.props)
+        reconcile(el, vNode.children)
+
+        // move
+        if (item.i > i) {
+          item.i = i
+          if (i) left!.after(el)
+          else parentEl.prepend(el)
+        }
+      }
+      left = el
+    }
+
+    for (const key of keys.keys()) {
+      // remove
+      if (!touched.has(key)) {
+        parentEl.removeChild(keys.get(key)!.el)
+        keys.delete(key)
+      }
+    }
+
+    return
+  } else if (next.keyed) {
+    attach(parentEl, next)
+    return
+  }
+
+  const prev = parentEl.childNodes as NodeListOf<Element>
   const prevLength = prev.length
 
   if (next.length >= prevLength) {
@@ -250,4 +349,5 @@ const reconcile = (parentEl: any, next: any) => {
 
 // entry point render vdom to dom element
 
-export const render = (vNode: any, el: any) => reconcile(el, expand(vNode))
+export const render = (vNode: VNode, el: Element) =>
+  reconcile(el, expand(vNode))

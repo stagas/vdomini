@@ -1,4 +1,5 @@
-import { h, Fragment } from './h'
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { h, Fragment } from '../h'
 
 describe('jsx', () => {
   it('lowercase as string tags', () => {
@@ -6,7 +7,7 @@ describe('jsx', () => {
     expect(v.type).toEqual('foo')
   })
 
-  it('PascalCase as ctor references', () => {
+  it('function components', () => {
     const Foo = () => <></>
     const v = <Foo />
     expect(v.type).toEqual(Foo)
@@ -20,30 +21,30 @@ describe('jsx', () => {
   it('with attribute string', () => {
     const v = <foo hello={'world 123'} />
     expect(v.type).toEqual('foo')
-    expect(v.props.hello).toEqual('world 123')
+    expect(v.props!.hello).toEqual('world 123')
   })
 
   it('with attribute multiword', () => {
     const v = <foo helloWorld={'hi'} />
     expect(v.type).toEqual('foo')
-    expect(v.props.helloWorld).toEqual('hi')
+    expect(v.props!.helloWorld).toEqual('hi')
   })
 
   it('with attribute number', () => {
     const v = <foo hello={15} />
     expect(v.type).toEqual('foo')
-    expect(v.props.hello).toEqual(15)
+    expect(v.props!.hello).toEqual(15)
   })
 
   it('with attribute ref', () => {
     const hello = { world: true }
     const v = <foo hello={hello} />
     expect(v.type).toEqual('foo')
-    expect(v.props.hello).toEqual(hello)
+    expect(v.props!.hello).toEqual(hello)
   })
 
   it('with child', () => {
-    const v = (
+    const v: any = (
       <foo>
         <bar></bar>
       </foo>
@@ -53,7 +54,7 @@ describe('jsx', () => {
   })
 
   it('with child and text', () => {
-    const v = (
+    const v: any = (
       <foo>
         <bar></bar>yo
       </foo>
@@ -64,7 +65,7 @@ describe('jsx', () => {
   })
 
   it('with children mapped', () => {
-    const v = (
+    const v: any = (
       <foo>
         {[1, 2, 3].map(x => (
           <bar key={x}>{x}</bar>
@@ -81,14 +82,16 @@ describe('jsx', () => {
   })
 
   it('with children empty array', () => {
-    const v = <foo>{[]}</foo>
+    const v: any = <foo>{[]}</foo>
     expect(v.type).toEqual('foo')
     expect(v.children.length).toEqual(1)
     expect(v.children[0].length).toEqual(0)
   })
+})
 
+describe('e2e', () => {
   // skipping because it ruins coverage
-  it.skip('works', () => {
+  it('complex case 1', () => {
     const i = 10
     const prop = 'foo'
     const v = (

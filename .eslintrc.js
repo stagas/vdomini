@@ -18,7 +18,6 @@ module.exports = {
     react: {
       pragma: 'h',
       fragment: 'Fragment',
-      version: '17',
     },
   },
   rules: {
@@ -28,10 +27,5 @@ module.exports = {
       'error',
       { args: 'all', argsIgnorePattern: '^_' },
     ],
-    // until Typescript/jsx gets proper return value typings
-    // we will just use any everywhere
-    // https://github.com/Microsoft/TypeScript/issues/21699
-    '@typescript-eslint/no-explicit-any': 'off',
-    '@typescript-eslint/no-namespace': 'off',
   },
 }

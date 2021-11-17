@@ -1,4 +1,4 @@
-import { h, Fragment } from './h'
+import { h, Fragment } from '../h'
 
 describe('h(type, props, children)', () => {
   it('type=string', () => {
@@ -7,11 +7,15 @@ describe('h(type, props, children)', () => {
   })
 
   it('type=undefined', () => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     const v = h(undefined)
     expect(v.type).toEqual(undefined)
   })
 
   it('type=null', () => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     const v = h(null)
     expect(v.type).toEqual(null)
   })

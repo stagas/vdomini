@@ -39,6 +39,15 @@ const render = (tree: any) => {
   r(tree, container)
 }
 
+// frameworks use microtasks that beat benchmarks
+const nextTick = (fn: any) =>
+  new Promise<void>(resolve =>
+    setTimeout(() => {
+      fn()
+      resolve()
+    }, 1),
+  )
+
 const create = (count: number, name: string) => {
   let c
 
@@ -52,44 +61,64 @@ const create = (count: number, name: string) => {
     .map((_, i) => ({ key: i, value: i }))
 
   console.time('render ' + name)
+
+  // for (let i = 0; i < count; i++) {
+  //   const a = (Math.random() * count) | 0
+  //   const b = (Math.random() * count) | 0
+  //   list.splice(b, 0, list.splice(a, 1, list[b])[0])
+  //   c = factory({ list })
+  //   render(c)
+  // }
+
   for (let i = 0; i < count; i++) {
     c = factory({ list: list.sort(randomly) })
     render(c)
   }
-  console.timeEnd('render ' + name)
 
-  return c
+  return nextTick(() => {
+    console.timeEnd('render ' + name)
+    return c
+  })
+
+  // console.time('render ' + name)
+  // for (let i = 0; i < count; i++) {
+  //   c = factory({ list: list.sort(randomly) })
+  //   render(c)
+  // }
+  // console.timeEnd('render ' + name)
+
+  // return c
 }
 
 const cases: any = {
   vdomini: [vdomini_h, vdomini_r, vdomini_f],
-  // react: [react_h, react_r, react_f],
-  // preact: [preact_h, preact_r, preact_f],
+  react: [react_h, react_r, react_f],
+  preact: [preact_h, preact_r, preact_f],
   inferno: [inferno_h, inferno_r, inferno_f],
 }
 
-const testAllEqual = () => {
-  let prev
-  for (const c in cases) {
-    ;[h, r, Fragment] = cases[c]
-    count = 10
-    create(1, c)
-    const html = document.body.innerHTML
-    if (prev && prev !== html) {
-      console.error(prev)
-      console.error(html)
-      throw new Error('Not equal: ' + c)
-    }
-    prev = html
-  }
-}
+// const testAllEqual = () => {
+//   let prev
+//   for (const c in cases) {
+//     ;[h, r, Fragment] = cases[c]
+//     count = 10
+//     create(1, c)
+//     const html = document.body.innerHTML
+//     if (prev && prev !== html) {
+//       console.error(prev)
+//       console.error(html)
+//       throw new Error('Not equal: ' + c)
+//     }
+//     prev = html
+//   }
+// }
 
 // testAllEqual()
 
 // bench
 
 const bench = async () => {
-  for (count of [400]) {
+  for (count of [500]) {
     await suite(
       `${count} iterations`,
 
@@ -98,7 +127,7 @@ const bench = async () => {
         .map(c =>
           add(c, async () => {
             ;[h, r, Fragment] = cases[c]
-            create(count, c)
+            return create(count, c)
           }),
         ),
     )
