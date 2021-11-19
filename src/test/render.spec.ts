@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Fragment } from '../h'
-import { render } from '../render'
+import { Fragment, render, current, trigger } from '../'
 
 let c: HTMLDivElement
 beforeEach(() => (c = document.createElement('div')))
@@ -86,6 +85,23 @@ describe('render(v, el)', () => {
     const div = c.firstChild as any
     expect(div.ref).toEqual(undefined)
     expect(ref.current).toBe(div)
+  })
+
+  it('p w/ref different ref', () => {
+    const ref: any = {}
+    render({ type: 'p', props: { ref }, children: [] }, c)
+    expect(c.innerHTML).toEqual('<p></p>')
+    const p = c.firstChild as any
+    expect(p.ref).toEqual(undefined)
+    expect(ref.current).toBe(p)
+
+    const ref2: any = {}
+    render({ type: 'p', props: { ref: ref2 }, children: [] }, c)
+    expect(c.innerHTML).toEqual('<p></p>')
+    const p2 = c.firstChild as any
+    expect(p2.ref).toEqual(undefined)
+    expect(ref.current).toBe(p)
+    expect(ref2.current).toBe(p2)
   })
 
   it('p w/prop', () => {
@@ -884,6 +900,30 @@ describe('render(v, el)', () => {
       c,
     )
     expect(c.innerHTML).toEqual('<p></p>')
+  })
+
+  it('function w/ hook', () => {
+    let hook: any
+    let i = 0
+    const Foo = () => {
+      hook = current.hook
+      return { type: 'p', props: null, children: [i++] }
+    }
+    render(
+      {
+        type: Foo,
+        props: null,
+        children: [],
+      },
+      c,
+    )
+    expect(c.innerHTML).toEqual('<p>0</p>')
+    expect(hook.parent).toBe(c)
+    trigger(hook)
+    expect(hook.parent).toBe(c)
+    expect(c.innerHTML).toEqual('<p>1</p>')
+    trigger(hook)
+    expect(c.innerHTML).toEqual('<p>2</p>')
   })
 
   it('function type w/ fragment', () => {

@@ -65,18 +65,18 @@ const create = (count: number, name: string) => {
 
   console.time('render ' + name)
 
-  // for (let i = 0; i < count; i++) {
-  //   const a = (Math.random() * count) | 0
-  //   const b = (Math.random() * count) | 0
-  //   list.splice(b, 0, list.splice(a, 1, list[b])[0])
-  //   c = factory({ list })
-  //   render(c)
-  // }
-
   for (let i = 0; i < count; i++) {
-    c = factory({ list: list.sort(randomly) })
+    const a = (Math.random() * count) | 0
+    const b = (Math.random() * count) | 0
+    list.splice(b, 0, list.splice(a, 1, list[b])[0])
+    c = factory({ list })
     render(c)
   }
+
+  // for (let i = 0; i < count; i++) {
+  //   c = factory({ list: list.sort(randomly) })
+  //   render(c)
+  // }
 
   return nextTick(() => {
     console.timeEnd('render ' + name)
@@ -95,8 +95,8 @@ const create = (count: number, name: string) => {
 
 const cases: any = {
   vdomini: [vdomini_h, vdomini_r, vdomini_f],
-  react: [react_h, react_r, react_f],
-  preact: [preact_h, preact_r, preact_f],
+  // react: [react_h, react_r, react_f],
+  // preact: [preact_h, preact_r, preact_f],
   inferno: [inferno_h, inferno_r, inferno_f],
 }
 

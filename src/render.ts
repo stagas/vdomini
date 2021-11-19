@@ -7,6 +7,7 @@ import type {
   VChild,
   FunctionalComponent,
 } from './h'
+import { VHook } from '.'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Any = any
@@ -25,6 +26,8 @@ const propCache = new WeakMap<object, PropCacheItem>()
 
 type ListCacheItem = Map<object, { i: number; el: Element }>
 const listCache = new WeakMap<Node, ListCacheItem>()
+
+export const hookCache = new WeakMap<VNode, VHook>()
 
 // props
 
@@ -207,10 +210,22 @@ const expand = (
   const type = vNode.type
 
   if (typeof type === 'function') {
+    // enables reactive updates as the function component that runs below
+    // can access through the export `current.hook`.
+    const hook: VHook = (current.hook = {
+      vNode,
+      doc,
+      top: current.top!,
+    }) // TODO: only gather when requested with a getHook()
+
     const v = (vNode.type as FunctionalComponent)({
       ...vNode.props,
       children: vNode.children,
     })
+
+    // keep a pointer to the vNode data for later reactive partial updates
+    hookCache.set(v, hook)
+
     // this is a weird situation.
     // we special case "key" because when "expanding" the
     // function it doesn't have knowledge of the parent "key".
@@ -221,6 +236,7 @@ const expand = (
     // but they have to be given the "key" from the parent component
     // so this is what is happening here.
     if (vNode.props?.key != null) v.props = { key: vNode.props.key }
+
     return expand(v, doc)
   }
 
@@ -237,18 +253,23 @@ const expand = (
           )
         }
       }
-      return [
-        {
-          doc,
-          type,
-          props: vNode.props,
-          children: expand(
-            vNode.children,
-            // svg namespace exodus
-            (type === 'foreignObject' && xhtml) || doc,
-          ),
-        } as VNodeObject,
-      ]
+
+      const vNodeObject = {
+        doc,
+        type,
+        props: vNode.props,
+        children: expand(
+          vNode.children,
+          // svg namespace exodus
+          (type === 'foreignObject' && xhtml) || doc,
+        ),
+      } as VNodeObject
+
+      // populate with reference for reactive updates
+      if (hookCache.has(vNode))
+        hookCache.set(vNodeObject, hookCache.get(vNode)!)
+
+      return [vNodeObject]
   }
 }
 
@@ -262,9 +283,17 @@ const create = ({ doc, type, props, children }: VNodeObject) => {
   return child
 }
 
-const append = (el: Element, vNode: VNodeObject | string) => {
-  const child = typeof vNode === 'string' ? vNode : create(vNode)
-  el.append(child)
+const append = (parent: Element, vNode: VNodeObject | string) => {
+  let child
+
+  if (typeof vNode === 'string') {
+    child = vNode
+  } else {
+    child = create(vNode)
+    setHookParentChild(vNode, parent, child)
+  }
+
+  parent.append(child)
   return child
 }
 
@@ -281,10 +310,14 @@ const replace = (
   }
 
   if (child.nodeName.toUpperCase() !== vNode.type.toUpperCase()) {
-    parent.replaceChild(create(vNode), child)
+    const v = create(vNode)
+    setHookParentChild(vNode, parent, v)
+    parent.replaceChild(v, child)
     return
   }
 
+  // enable reactive updates final step
+  setHookParentChild(vNode, parent, child)
   updateProps(child, vNode.doc, vNode.type, vNode.props)
   reconcile(child, vNode.children)
 }
@@ -303,10 +336,10 @@ const attach = (el: Element, children: VNodeObject['children']) => {
 
 // dom reconciliation algorithm
 
-const reconcile = (parentEl: Element, next: VNodeObject['children']) => {
-  if (listCache.has(parentEl)) {
+const reconcile = (parent: Element, next: VNodeObject['children']) => {
+  if (listCache.has(parent)) {
     touched.clear()
-    const keys = listCache.get(parentEl)!
+    const keys = listCache.get(parent)!
 
     for (let i = 0, left: Element; i < next.length; i++) {
       const vNode = next[i] as VNodeObject
@@ -314,59 +347,87 @@ const reconcile = (parentEl: Element, next: VNodeObject['children']) => {
       const key = vNode.props!.key as object
       touched.add(key)
 
-      let el: Element
+      let child: Element
       if (!keys.has(key)) {
         // create
-        el = create(vNode)
-        keys.set(key, { i, el })
-        if (i) left!.after(el)
-        else parentEl.prepend(el)
+        child = create(vNode)
+
+        keys.set(key, { i, el: child })
+        if (i) left!.after(child)
+        else parent.prepend(child)
       } else {
         const item = keys.get(key)!
-        el = item.el
+        child = item.el
 
         // update
-        updateProps(el, vNode.doc, vNode.type, vNode.props)
-        reconcile(el, vNode.children)
+        updateProps(child, vNode.doc, vNode.type, vNode.props)
+        reconcile(child, vNode.children)
 
         // move
         if (item.i > i) {
           item.i = i
-          if (i) left!.after(el)
-          else parentEl.prepend(el)
+          if (i) left!.after(child)
+          else parent.prepend(child)
         }
       }
-      left = el
+
+      setHookParentChild(vNode, parent, child)
+
+      left = child
     }
 
     for (const key of keys.keys()) {
       // remove
       if (!touched.has(key)) {
-        parentEl.removeChild(keys.get(key)!.el)
+        parent.removeChild(keys.get(key)!.el)
         keys.delete(key)
       }
     }
 
     return
   } else if (next.keyed) {
-    attach(parentEl, next)
+    attach(parent, next)
     return
   }
 
-  const prev = parentEl.childNodes as NodeListOf<Element>
+  const prev = parent.childNodes as NodeListOf<Element>
   const prevLength = prev.length
 
   if (next.length >= prevLength) {
-    for (let i = 0; i < prevLength; i++) replace(parentEl, prev[i], next[i])
-    for (let i = prevLength; i < next.length; i++) append(parentEl, next[i])
+    for (let i = 0; i < prevLength; i++) replace(parent, prev[i], next[i])
+    for (let i = prevLength; i < next.length; i++) append(parent, next[i])
   } else {
     for (let i = next.length; i < prevLength; i++)
-      parentEl.removeChild(parentEl.lastChild!)
-    for (let i = 0; i < next.length; i++) replace(parentEl, prev[i], next[i])
+      parent.removeChild(parent.lastChild!)
+    for (let i = 0; i < next.length; i++) replace(parent, prev[i], next[i])
+  }
+}
+
+// hooks
+
+export const current: {
+  hook: VHook | null
+  top: Element | null
+} = { hook: null, top: null }
+
+const setHookParentChild = (vNode: VNode, parent: Element, child: Element) => {
+  if (!hookCache.has(vNode)) return
+  const hook = hookCache.get(vNode)!
+  hook.parent = parent
+  hook.child = child
+}
+
+export const trigger = (hook: VHook) => {
+  if (hook.parent && hook.child) {
+    replace(hook.parent!, hook.child!, expand(hook.vNode, hook.doc)[0])
+  } else {
+    reconcile(hook.top!, expand(hook.vNode))
   }
 }
 
 // entry point render vdom to dom element
 
-export const render = (vNode: VNode, el: Element) =>
+export const render = (vNode: VNode, el: Element) => {
+  current.top = el
   reconcile(el, expand(vNode))
+}

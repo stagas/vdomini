@@ -1,73 +1,116 @@
 /** @jsx h */
 /** @jsxFrag Fragment */
 
-import { h, Fragment, render } from 'vdomini'
+import { h, Fragment, render, current, trigger } from 'vdomini'
+
+const useCallback = (fn: () => void) => {
+  const hook = useHook()
+  debugger
+  return () => {
+    fn()
+    hook()
+  }
+}
+
+const useHook = () => {
+  const hook = current.hook
+  return () => trigger(hook!)
+}
 
 let inputValue = ''
-let priority = 'chore'
+
+const main = {
+  id: 0,
+  priority: 'chore',
+}
 
 type Todo = { id: number; text: string; priority: string }
 
-const addTodo = () => {
-  todos.unshift({
-    id: Math.random(),
-    text: inputValue,
-    priority,
-  })
+type PriorityTarget = { id: number; priority: string }
 
-  priority = 'chore'
-  inputValue = ''
-  inputRef.current!.focus()
-
-  update()
-}
-
-const TodoItem = ({ text, priority }: { text: string; priority: string }) => (
+const TodoItem = ({ todo }: { todo: Todo }) => (
   <li>
-    {text} {priority === 'important' && '!!!'}
+    {todo.text} {todo.priority === 'important' && '!!!'}
+    <PrioritySelect target={todo} onchange={useHook()} />
   </li>
 )
 
-const PriorityRadio = ({ value }: { value: string }) => (
+const PrioritySelect = ({
+  target,
+  onchange,
+}: {
+  target: PriorityTarget
+  onchange?: () => void
+}) => {
+  return (
+    <>
+      <PriorityRadio target={target} onchange={onchange} value="important" />
+      <PriorityRadio target={target} onchange={onchange} value="chore" />
+    </>
+  )
+}
+
+const PriorityRadio = ({
+  value,
+  target,
+  onchange,
+}: {
+  value: string
+  target: PriorityTarget
+  onchange?: () => void
+}) => (
   <label>
     {value}
     <input
       type="radio"
-      name="priority"
+      name={'priority' + target.id}
       value={value}
-      onchange={() => (priority = value)}
-      checked={priority === value}
+      onchange={() => ((target.priority = value), onchange?.())}
+      checked={target.priority === value}
     />
   </label>
 )
 
 const inputRef: { current?: HTMLInputElement } = {}
 
-const TodoApp = ({ todos }: { todos: Todo[] }) => (
-  <>
-    <h1>My Todo App</h1>
-    <input
-      ref={inputRef}
-      type="string"
-      value={inputValue}
-      autofocus
-      oninput={(e: InputEvent) => {
-        inputValue = inputRef.current!.value
-      }}
-      onkeydown={(e: KeyboardEvent) => {
-        e.key === 'Enter' && addTodo()
-      }}
-    />
-    <PriorityRadio value="important" />
-    <PriorityRadio value="chore" />
-    <button onclick={addTodo}>Add Todo</button>
-    <ul>
-      {todos.map(todo => (
-        <TodoItem key={todo.id} {...todo} />
-      ))}
-    </ul>
-  </>
-)
+const TodoApp = ({ todos }: { todos: Todo[] }) => {
+  const addTodo = useCallback(() => {
+    todos.unshift({
+      id: Math.random(),
+      text: inputValue,
+      priority: main.priority,
+    })
+
+    main.priority = 'chore'
+    inputValue = ''
+    inputRef.current!.focus()
+  })
+
+  return (
+    <>
+      <h1>My Todo App</h1>
+      <input
+        ref={inputRef}
+        type="string"
+        value={inputValue}
+        autofocus
+        oninput={(e: InputEvent) => {
+          inputValue = inputRef.current!.value
+        }}
+        onkeydown={(e: KeyboardEvent) => {
+          e.key === 'Enter' && addTodo()
+        }}
+      />
+      <PrioritySelect target={main} />
+      <button onclick={addTodo}>Add Todo</button>
+      <ul>
+        {todos.map(todo => (
+          <TodoItem key={todo.id} todo={todo} />
+        ))}
+      </ul>
+    </>
+  )
+}
 
 const todos: Todo[] = []
 

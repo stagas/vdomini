@@ -28,6 +28,14 @@ export type VProps = Record<string, unknown> | null | undefined
 export type VChild = VNode | string | number | boolean | undefined
 export type VChildren = VChild[]
 
+export interface VHook {
+  top?: Element
+  parent?: Element
+  child?: Element
+  vNode: VNode
+  doc: VNodeObject['doc']
+}
+
 export type VNodeObject = {
   doc: {
     createElement: typeof document.createElement
