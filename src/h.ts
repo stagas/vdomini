@@ -29,7 +29,10 @@ export type VChild = VNode | string | number | boolean | undefined
 export type VChildren = VChild[]
 
 export type VNodeObject = {
-  create: typeof document.createElement
+  doc: {
+    createElement: typeof document.createElement
+    createAttribute: typeof document.createAttribute
+  }
   type: string
   props: VNode['props']
   children: (VNodeObject | string)[] & { keyed?: boolean }

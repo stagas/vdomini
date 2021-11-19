@@ -35,11 +35,23 @@ export const toCssText = (style: CSSStyleDeclaration) => {
 //   ...htmlEventAttributes.map(key => [key, true]),
 // ])
 
-export const createElement = document.createElement.bind(
-  document,
-) as typeof document.createElement
+export const xhtml = {
+  createElement: document.createElement,
+  createAttribute: document.createAttribute,
+}
 
-export const createElementSvg = document.createElementNS.bind(
-  document,
-  'http://www.w3.org/2000/svg',
-) as typeof document.createElement
+export const svg = {
+  createElement: document.createElementNS.bind(
+    document,
+    'http://www.w3.org/2000/svg',
+  ),
+  createAttribute: document.createAttributeNS.bind(
+    document,
+    'http://www.w3.org/2000/svg',
+  ),
+} as typeof xhtml
+
+// export const createElementSvg = document.createElementNS.bind(
+//   document,
+//   'http://www.w3.org/2000/svg',
+// ) as typeof document.createElement

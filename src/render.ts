@@ -1,4 +1,4 @@
-import { toCssText, createElement, createElementSvg } from './util'
+import { toCssText, xhtml, svg } from './util'
 import { Fragment } from './h'
 import type {
   VNode,
@@ -30,6 +30,7 @@ const listCache = new WeakMap<Node, ListCacheItem>()
 
 const createProp = (
   el: Element,
+  doc: typeof xhtml,
   type: string,
   name: string,
   value: unknown,
@@ -71,18 +72,22 @@ const createProp = (
   switch (typeof value) {
     case 'string':
     case 'number':
-      el.setAttributeNode((node = attrs[name] = document.createAttribute(attr)))
+      el.setAttributeNode(
+        (node = attrs[name] = doc.createAttribute.call(document, attr)),
+      )
       node.value = value as string
       return
     case 'function':
-      el.setAttributeNode((node = attrs[name] = document.createAttribute(attr)))
+      el.setAttributeNode(
+        (node = attrs[name] = doc.createAttribute.call(document, attr)),
+      )
       node.value = ''
       ;(el as Any)[attr] = value
       return
     case 'boolean':
       if (value) {
         el.setAttributeNode(
-          (node = attrs[name] = document.createAttribute(attr)),
+          (node = attrs[name] = doc.createAttribute.call(document, attr)),
         )
         node.value = ''
       }
@@ -94,16 +99,22 @@ const createProp = (
 
 const createProps = (
   el: Element,
+  doc: typeof xhtml,
   type: string,
   props: Record<string, unknown>,
   attrs: Record<string, Attr> = {},
 ) => {
-  for (const name in props) createProp(el, type, name, props[name], attrs)
+  for (const name in props) createProp(el, doc, type, name, props[name], attrs)
   propCache.set(el, { props, attrs })
 }
 
-const updateProps = (el: Element, type: string, next: VProps) => {
-  if (!propCache.has(el)) return next && createProps(el, type, next)
+const updateProps = (
+  el: Element,
+  doc: typeof xhtml,
+  type: string,
+  next: VProps,
+) => {
+  if (!propCache.has(el)) return next && createProps(el, doc, type, next)
 
   const c = propCache.get(el)!
   const { attrs, props } = c
@@ -166,7 +177,7 @@ const updateProps = (el: Element, type: string, next: VProps) => {
   // created props
   for (const name in next)
     if (!(name in attrs) && !(name in props))
-      createProp(el, type, name, next[name], attrs)
+      createProp(el, doc, type, name, next[name], attrs)
 
   c.props = next
 }
@@ -175,7 +186,7 @@ const updateProps = (el: Element, type: string, next: VProps) => {
 
 const expand = (
   vNode: VNode['children'] | VChild,
-  create = createElement,
+  doc = xhtml,
 ): VNodeObject['children'] => {
   switch (typeof vNode) {
     case 'string':
@@ -188,8 +199,7 @@ const expand = (
 
   if (Array.isArray(vNode)) {
     const result: VNodeObject['children'] = []
-    for (let i = 0; i < vNode.length; i++)
-      result.push(...expand(vNode[i], create))
+    for (let i = 0; i < vNode.length; i++) result.push(...expand(vNode[i], doc))
     result.keyed = (result[0] as VNode)?.props?.key != null
     return result
   }
@@ -211,14 +221,14 @@ const expand = (
     // but they have to be given the "key" from the parent component
     // so this is what is happening here.
     if (vNode.props?.key != null) v.props = { key: vNode.props.key }
-    return expand(v, create)
+    return expand(v, doc)
   }
 
   switch (type) {
     case Fragment:
-      return expand(vNode.children, create)
+      return expand(vNode.children, doc)
     case 'svg': // svg namespace entry
-      create = createElementSvg
+      doc = svg
     default:
       if (vNode.props?.style) {
         if (typeof vNode.props.style === 'object') {
@@ -229,13 +239,13 @@ const expand = (
       }
       return [
         {
-          create,
+          doc,
           type,
           props: vNode.props,
           children: expand(
             vNode.children,
             // svg namespace exodus
-            (type === 'foreignObject' && createElement) || create,
+            (type === 'foreignObject' && xhtml) || doc,
           ),
         } as VNodeObject,
       ]
@@ -244,9 +254,9 @@ const expand = (
 
 // (v)dom methods
 
-const create = ({ create, type, props, children }: VNodeObject) => {
-  const child = create(type)
-  props && createProps(child, type, props)
+const create = ({ doc, type, props, children }: VNodeObject) => {
+  const child = doc.createElement.call(document, type)
+  props && createProps(child, doc, type, props)
   if (children.keyed) attach(child, children)
   else for (let i = 0; i < children.length; i++) append(child, children[i])
   return child
@@ -275,7 +285,7 @@ const replace = (
     return
   }
 
-  updateProps(child, vNode.type, vNode.props)
+  updateProps(child, vNode.doc, vNode.type, vNode.props)
   reconcile(child, vNode.children)
 }
 
@@ -316,7 +326,7 @@ const reconcile = (parentEl: Element, next: VNodeObject['children']) => {
         el = item.el
 
         // update
-        updateProps(el, vNode.type, vNode.props)
+        updateProps(el, vNode.doc, vNode.type, vNode.props)
         reconcile(el, vNode.children)
 
         // move

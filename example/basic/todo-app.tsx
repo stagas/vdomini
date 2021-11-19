@@ -35,7 +35,7 @@ const PriorityRadio = ({ value }: { value: string }) => (
       type="radio"
       name="priority"
       value={value}
-      onChange={() => (priority = value)}
+      onchange={() => (priority = value)}
       checked={priority === value}
     />
   </label>
@@ -50,17 +50,17 @@ const TodoApp = ({ todos }: { todos: Todo[] }) => (
       ref={inputRef}
       type="string"
       value={inputValue}
-      autoFocus
-      onInput={(e: InputEvent) => {
+      autofocus
+      oninput={(e: InputEvent) => {
         inputValue = inputRef.current!.value
       }}
-      onKeyDown={(e: KeyboardEvent) => {
+      onkeydown={(e: KeyboardEvent) => {
         e.key === 'Enter' && addTodo()
       }}
     />
     <PriorityRadio value="important" />
     <PriorityRadio value="chore" />
-    <button onClick={addTodo}>Add Todo</button>
+    <button onclick={addTodo}>Add Todo</button>
     <ul>
       {todos.map(todo => (
         <TodoItem key={todo.id} {...todo} />

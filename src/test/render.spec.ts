@@ -17,23 +17,43 @@ describe('render(v, el)', () => {
     expect(c.innerHTML).toEqual('<svg></svg>')
   })
 
+  it('svg prop', () => {
+    render({ type: 'svg', props: { viewBox: '0 0 10 10' }, children: [] }, c)
+    expect(c.innerHTML).toEqual('<svg viewBox="0 0 10 10"></svg>')
+  })
+
+  it('svg child prop', () => {
+    render(
+      {
+        type: 'svg',
+        props: null,
+        children: [{ type: 'path', props: { pathLength: 90 }, children: [] }],
+      },
+      c,
+    )
+    expect(c.innerHTML).toEqual('<svg><path pathLength="90"></path></svg>')
+  })
+
   it('svg then foreignObject exodus', () => {
     render(
       {
         type: 'svg',
         props: null,
         children: [
+          { type: 'path', props: { pathLength: 90 }, children: [] },
           {
             type: 'foreignObject',
             props: null,
-            children: [{ type: 'div', props: null, children: [] }],
+            children: [
+              { type: 'input', props: { autoFocus: true }, children: [] },
+            ],
           },
         ],
       },
       c,
     )
     expect(c.innerHTML).toEqual(
-      '<svg><foreignObject><div></div></foreignObject></svg>',
+      '<svg><path pathLength="90"></path><foreignObject><input autofocus=""></foreignObject></svg>',
     )
   })
 
@@ -112,7 +132,7 @@ describe('render(v, el)', () => {
   })
 
   it('input w/prop boolean', () => {
-    render({ type: 'input', props: { autoFocus: true }, children: [] }, c)
+    render({ type: 'input', props: { autofocus: true }, children: [] }, c)
     expect(c.innerHTML).toEqual('<input autofocus="">')
   })
 
@@ -124,7 +144,7 @@ describe('render(v, el)', () => {
   })
 
   it('input w/prop boolean false', () => {
-    render({ type: 'input', props: { autoFocus: true }, children: [] }, c)
+    render({ type: 'input', props: { autofocus: true }, children: [] }, c)
     expect(c.innerHTML).toEqual('<input autofocus="">')
     render({ type: 'input', props: { autoFocus: false }, children: [] }, c)
     expect(c.innerHTML).toEqual('<input>')
@@ -133,7 +153,7 @@ describe('render(v, el)', () => {
   it('input w/prop boolean added', () => {
     render({ type: 'input', props: null, children: [] }, c)
     expect(c.innerHTML).toEqual('<input>')
-    render({ type: 'input', props: { autoFocus: true }, children: [] }, c)
+    render({ type: 'input', props: { autofocus: true }, children: [] }, c)
     expect(c.innerHTML).toEqual('<input autofocus="">')
   })
 
@@ -175,7 +195,7 @@ describe('render(v, el)', () => {
     render(
       {
         type: 'img',
-        props: { crossOrigin: 'anonymous' },
+        props: { crossorigin: 'anonymous' },
         children: [],
       },
       c,
@@ -187,7 +207,7 @@ describe('render(v, el)', () => {
     render(
       {
         type: 'img',
-        props: { crossOrigin: 'anonymous' },
+        props: { crossorigin: 'anonymous' },
         children: [],
       },
       c,
@@ -256,7 +276,7 @@ describe('render(v, el)', () => {
     render(
       {
         type: 'img',
-        props: { crossOrigin: 'anonymous' },
+        props: { crossorigin: 'anonymous' },
         children: [],
       },
       c,
@@ -429,10 +449,10 @@ describe('render(v, el)', () => {
       c,
     )
     const prev = Array.from(c.querySelectorAll('li'))
-    expect(prev[0].id).toEqual('first')
     expect(c.innerHTML).toEqual(
       '<ul><li id="first"></li><li id="second"></li><li id="third"></li></ul>',
     )
+    expect(prev[0].id).toEqual('first')
     render(
       {
         type: 'ul',
