@@ -37,6 +37,37 @@ describe('render(v, el)', () => {
     )
   })
 
+  it('p w/ref', () => {
+    const ref: any = {}
+    render({ type: 'p', props: { ref }, children: [] }, c)
+    expect(c.innerHTML).toEqual('<p></p>')
+    const p = c.firstChild as any
+    expect(p.ref).toEqual(undefined)
+    expect(ref.current).toBe(p)
+  })
+
+  it('p w/ref update', () => {
+    const ref: any = {}
+    render({ type: 'p', props: { ref }, children: [] }, c)
+    expect(c.innerHTML).toEqual('<p></p>')
+    const p = c.firstChild as any
+    expect(p.ref).toEqual(undefined)
+    expect(ref.current).toBe(p)
+
+    render({ type: 'p', props: { ref, align: 'center' }, children: [] }, c)
+    expect(c.innerHTML).toEqual('<p align="center"></p>')
+    const p2 = c.firstChild as any
+    expect(p2.ref).toEqual(undefined)
+    expect(ref.current).toBe(p)
+    expect(ref.current).toBe(p2)
+
+    render({ type: 'div', props: { ref }, children: [] }, c)
+    expect(c.innerHTML).toEqual('<div></div>')
+    const div = c.firstChild as any
+    expect(div.ref).toEqual(undefined)
+    expect(ref.current).toBe(div)
+  })
+
   it('p w/prop', () => {
     render({ type: 'p', props: { align: 'center' }, children: [] }, c)
     expect(c.innerHTML).toEqual('<p align="center"></p>')
@@ -256,7 +287,7 @@ describe('render(v, el)', () => {
     render(
       {
         type: 'button',
-        props: { onClick: () => (clicked = true) },
+        props: { onclick: () => (clicked = true) },
         children: [],
       },
       c,
@@ -273,7 +304,7 @@ describe('render(v, el)', () => {
     render(
       {
         type: 'button',
-        props: { onClick: () => clicked1++ },
+        props: { onclick: () => clicked1++ },
         children: [],
       },
       c,
@@ -287,7 +318,7 @@ describe('render(v, el)', () => {
     render(
       {
         type: 'button',
-        props: { onClick: () => clicked2++ },
+        props: { onclick: () => clicked2++ },
         children: [],
       },
       c,
@@ -306,7 +337,7 @@ describe('render(v, el)', () => {
     render(
       {
         type: 'button',
-        props: { onClick: () => clicked++ },
+        props: { onclick: () => clicked++ },
         children: [],
       },
       c,
@@ -335,7 +366,7 @@ describe('render(v, el)', () => {
     render(
       {
         type: 'button',
-        props: { onClick: () => clicked++ },
+        props: { onclick: () => clicked++ },
         children: [],
       },
       c,
@@ -348,7 +379,7 @@ describe('render(v, el)', () => {
     render(
       {
         type: 'button',
-        props: { onClick: () => clickedOther++ },
+        props: { onclick: () => clickedOther++ },
         children: [],
       },
       c,

@@ -29,6 +29,8 @@ $ npm i vdomini
 
 - **No surprises.**
 
+- **Compact. Readable. Hackable.**
+
 - **Minimal error surface -** With code as little as possible there can only be a handful of ways that
   something can go wrong and when it does it won't be because _"Issue [#47665]()"_ hasn't been resolved yet.
 

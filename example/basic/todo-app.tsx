@@ -15,8 +15,9 @@ const addTodo = () => {
     priority,
   })
 
-  inputValue = ''
   priority = 'chore'
+  inputValue = ''
+  inputRef.current!.focus()
 
   update()
 }
@@ -40,7 +41,7 @@ const PriorityRadio = ({ value }: { value: string }) => (
   </label>
 )
 
-const inputRef = {}
+const inputRef: { current?: HTMLInputElement } = {}
 
 const TodoApp = ({ todos }: { todos: Todo[] }) => (
   <>
@@ -51,7 +52,7 @@ const TodoApp = ({ todos }: { todos: Todo[] }) => (
       value={inputValue}
       autoFocus
       onInput={(e: InputEvent) => {
-        inputValue = (e.target as HTMLInputElement).value
+        inputValue = inputRef.current!.value
       }}
       onKeyDown={(e: KeyboardEvent) => {
         e.key === 'Enter' && addTodo()

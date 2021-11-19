@@ -1,4 +1,4 @@
-import { toAttr, toCssText, createElement, createElementSvg } from './util'
+import { toCssText, createElement, createElementSvg } from './util'
 import { Fragment } from './h'
 import type {
   VNode,
@@ -39,6 +39,9 @@ const createProp = (
   switch (name) {
     case 'key':
       return
+    case 'ref':
+      ;(value as Any).current = el
+      return
 
     // "value" and "checked" properties have to be set
     // directly on the element when it's an input to
@@ -63,7 +66,7 @@ const createProp = (
   }
 
   // create prop
-  const attr = toAttr[name] || name
+  const attr = name //toAttr[name] || name
   let node
   switch (typeof value) {
     case 'string':
@@ -121,15 +124,19 @@ const updateProps = (el: Element, type: string, next: VProps) => {
 
     value = next[name]
 
-    // special cases
-    switch (type) {
-      case 'input':
-        switch (name) {
-          // "value" and "checked" properties change directly on the element when
-          // editing an input so we can't diff and have to check it directly
-          case 'value':
-          case 'checked':
-            if ((el as Any)[name] !== value) (el as Any)[name] = value
+    switch (name) {
+      case 'ref':
+        if (el !== (value as Any).current) (value as Any).current = el
+        continue out
+
+      // "value" and "checked" properties change directly on the element when
+      // editing an input so we can't diff and have to check it directly
+      case 'value':
+      case 'checked':
+        // special cases
+        switch (type) {
+          case 'input':
+            ;(el as Any)[name] !== value && ((el as Any)[name] = value)
             continue out
         }
     }
@@ -137,7 +144,7 @@ const updateProps = (el: Element, type: string, next: VProps) => {
     // updated prop
     if (props[name] !== value) {
       if (typeof value === 'function') {
-        const attr = toAttr[name] || name
+        const attr = name //toAttr[name] || name
         props[attr] = (el as Any)[attr] = value
       } else if (!(name in attrs)) (el as Any)[name] = value
     }
@@ -251,6 +258,8 @@ const append = (el: Element, vNode: VNodeObject | string) => {
   return child
 }
 
+// TODO: this function has to be exposed in order for
+// reactive programming to be possible with partial updates
 const replace = (
   parent: Element,
   child: Element,

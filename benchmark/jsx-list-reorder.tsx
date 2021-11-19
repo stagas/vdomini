@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -11,7 +12,9 @@ import { h as preact_h, render as preact_r, Fragment as preact_f } from 'preact'
 import { render as inferno_r, Fragment as inferno_f } from 'inferno'
 import { createElement as inferno_h } from 'inferno-create-element'
 
+// @ts-ignore
 import { render as react_r } from 'react-dom'
+// @ts-ignore
 import { createElement as react_h, Fragment as react_f } from 'react'
 
 let container: any
@@ -49,7 +52,7 @@ const nextTick = (fn: any) =>
   )
 
 const create = (count: number, name: string) => {
-  let c
+  let c: any
 
   document.body.innerHTML =
     '<style>li { display: block; width: 200px; height: 50px; font-size: 16px; }</style>'
