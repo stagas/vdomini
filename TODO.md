@@ -1,3 +1,3 @@
-- hooks fail on document.body
-- hooks should determine last functional parent that wasn't a Fragment to trigger update or else render on the topmost
-- i.e topmost fails for some reason
+- [ ] custom element constructors
+- [ ] Test replaceNode hook retainment
+- [ ] Test removeChild prev[i] issue

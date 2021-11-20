@@ -18,38 +18,14 @@ declare global {
   }
 }
 
-export type VType =
-  | FunctionalComponent
-  | CustomElementConstructor
-  | string
-  | symbol
-
+export type VType = FunctionalComponent | string | symbol
 export type VProps = Record<string, unknown> | null | undefined
 export type VChild = VNode | string | number | boolean | undefined
-export type VChildren = VChild[]
-
-export interface VHook {
-  top?: Element
-  parent?: Element
-  child?: Element
-  vNode: VNode
-  doc: VNodeObject['doc']
-}
-
-export type VNodeObject = {
-  doc: {
-    createElement: typeof document.createElement
-    createAttribute: typeof document.createAttribute
-  }
-  type: string
-  props: VNode['props']
-  children: (VNodeObject | string)[] & { keyed?: boolean }
-}
 
 export interface VNode {
   type: VType
   props: VProps
-  children: VChildren
+  children: VChild[]
 }
 
 export interface FunctionalComponent {

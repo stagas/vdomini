@@ -6,7 +6,7 @@ import { VHook } from '../h'
 let c: any
 beforeEach(() => (c = document.createElement('div')))
 
-describe.skip('hooks', () => {
+describe('hooks', () => {
   it('p', () => {
     let hook: VHook | null
     let content = 'foo'
@@ -38,7 +38,7 @@ describe.skip('hooks', () => {
     expect(c.firstChild.textContent).toEqual('3')
   })
 
-  it.only('fragment top', () => {
+  it('fragment top', () => {
     let hook: VHook | null
     let i = 0
     const Foo = () => {
@@ -48,7 +48,6 @@ describe.skip('hooks', () => {
     render(<Foo />, c)
     expect(c.firstChild.textContent).toEqual('0')
     trigger(hook!)
-    debugger
     expect(c.firstChild.textContent).toEqual('1')
     trigger(hook!)
     expect(c.firstChild.textContent).toEqual('2')
@@ -67,7 +66,7 @@ describe.skip('hooks', () => {
       <div>
         <Foo />
       </div>,
-      c,
+      c
     )
     expect(c.innerHTML).toEqual('<div>0</div>')
     trigger(hook!)
@@ -91,7 +90,7 @@ describe.skip('hooks', () => {
           <Foo />
         </p>
       </div>,
-      c,
+      c
     )
     expect(c.innerHTML).toEqual('<div><p>0</p></div>')
     trigger(hook!)
@@ -117,7 +116,7 @@ describe.skip('hooks', () => {
           </b>
         </p>
       </div>,
-      c,
+      c
     )
     expect(c.innerHTML).toEqual('<div><p><b>0</b></p></div>')
     trigger(hook!)
@@ -143,7 +142,7 @@ describe.skip('hooks', () => {
           </li>
         ))}
       </div>,
-      c,
+      c
     )
     expect(c.innerHTML).toEqual('<div><li>0</li><li>1</li><li>2</li></div>')
     trigger(hook!)
@@ -167,13 +166,261 @@ describe.skip('hooks', () => {
           </li>
         ))}
       </div>,
-      c,
+      c
     )
     expect(c.innerHTML).toEqual('<div><li>0</li><li>1</li><li>2</li></div>')
     trigger(hook!)
-    debugger
     expect(c.innerHTML).toEqual('<div><li>3</li><li>1</li><li>2</li></div>')
     trigger(hook!)
     expect(c.innerHTML).toEqual('<div><li>4</li><li>1</li><li>2</li></div>')
+  })
+
+  it('fragment siblings (middle)', () => {
+    let hook: VHook | null
+    let i = 0
+    const Foo = ({ id }) => {
+      if (id === 2) hook = current.hook
+      return <>{i++}</>
+    }
+    render(
+      <div>
+        {[1, 2, 3].map(x => (
+          <li key={x}>
+            <Foo id={x} />
+          </li>
+        ))}
+      </div>,
+      c
+    )
+    expect(c.innerHTML).toEqual('<div><li>0</li><li>1</li><li>2</li></div>')
+    trigger(hook!)
+    expect(c.innerHTML).toEqual('<div><li>0</li><li>3</li><li>2</li></div>')
+    trigger(hook!)
+    expect(c.innerHTML).toEqual('<div><li>0</li><li>4</li><li>2</li></div>')
+  })
+
+  it('fragment siblings (top last)', () => {
+    let hook: VHook | null
+    let i = 0
+    const Foo = () => {
+      hook = current.hook
+      return <>{i++}</>
+    }
+    render(
+      <div>
+        {[1, 2, 3].map(x => (
+          <Foo key={x} />
+        ))}
+      </div>,
+      c
+    )
+    expect(c.innerHTML).toEqual('<div>012</div>')
+    trigger(hook!)
+    expect(c.innerHTML).toEqual('<div>013</div>')
+    trigger(hook!)
+    expect(c.innerHTML).toEqual('<div>014</div>')
+  })
+
+  it('fragment siblings (top first)', () => {
+    let hook: VHook | null
+    let i = 0
+    const Foo = ({ id }) => {
+      if (id === 1) hook = current.hook
+      return <>{i++}</>
+    }
+    render(
+      <div>
+        {[1, 2, 3].map(x => (
+          <Foo key={x} id={x} />
+        ))}
+      </div>,
+      c
+    )
+    expect(c.innerHTML).toEqual('<div>012</div>')
+    trigger(hook!)
+    expect(c.innerHTML).toEqual('<div>312</div>')
+    trigger(hook!)
+    expect(c.innerHTML).toEqual('<div>412</div>')
+  })
+
+  it('fragment siblings (top middle)', () => {
+    let hook: VHook | null
+    let i = 0
+    const Foo = ({ id }) => {
+      if (id === 2) hook = current.hook
+      return <>{i++}</>
+    }
+    render(
+      <div>
+        {[1, 2, 3].map(x => (
+          <Foo key={x} id={x} />
+        ))}
+      </div>,
+      c
+    )
+    expect(c.innerHTML).toEqual('<div>012</div>')
+    trigger(hook!)
+    expect(c.innerHTML).toEqual('<div>032</div>')
+    trigger(hook!)
+    expect(c.innerHTML).toEqual('<div>042</div>')
+  })
+
+  it('multiple deep', () => {
+    let hook_bar: VHook | null
+    let hook_foo: VHook | null
+    let i = 0
+    const Bar = () => {
+      hook_bar = current.hook
+      return <b>{i++}</b>
+    }
+    const Foo = () => {
+      hook_foo = current.hook
+      return (
+        <p>
+          {i++}
+          <Bar />
+        </p>
+      )
+    }
+    render(<Foo />, c)
+    expect(c.innerHTML).toEqual('<p>0<b>1</b></p>')
+    trigger(hook_bar!)
+    expect(c.innerHTML).toEqual('<p>0<b>2</b></p>')
+    trigger(hook_foo!)
+    expect(c.innerHTML).toEqual('<p>3<b>4</b></p>')
+    trigger(hook_bar!)
+    expect(c.innerHTML).toEqual('<p>3<b>5</b></p>')
+  })
+
+  it('fragment multiple', () => {
+    let hook: VHook | null
+    let i = 0
+    const Foo = () => {
+      hook = current.hook
+      return (
+        <>
+          {i++}
+          {i++}
+        </>
+      )
+    }
+    render(<Foo />, c)
+    expect(c.innerHTML).toEqual('01')
+    trigger(hook!)
+    expect(c.innerHTML).toEqual('23')
+    trigger(hook!)
+    expect(c.innerHTML).toEqual('45')
+  })
+
+  it('fragment multiple deep level 1', () => {
+    let hook: VHook | null
+    let i = 0
+    const Foo = () => {
+      hook = current.hook
+      return (
+        <>
+          {i++}
+          {i++}
+        </>
+      )
+    }
+    render(
+      <div>
+        <Foo />
+      </div>,
+      c
+    )
+    expect(c.innerHTML).toEqual('<div>01</div>')
+    trigger(hook!)
+    expect(c.innerHTML).toEqual('<div>23</div>')
+    trigger(hook!)
+    expect(c.innerHTML).toEqual('<div>45</div>')
+  })
+
+  it('fragment multiple deep level 2', () => {
+    let hook: VHook | null
+    let i = 0
+    const Foo = () => {
+      hook = current.hook
+      return (
+        <>
+          {i++}
+          {i++}
+        </>
+      )
+    }
+    render(
+      <div>
+        <p>
+          <Foo />
+        </p>
+      </div>,
+      c
+    )
+    expect(c.innerHTML).toEqual('<div><p>01</p></div>')
+    trigger(hook!)
+    expect(c.innerHTML).toEqual('<div><p>23</p></div>')
+    trigger(hook!)
+    expect(c.innerHTML).toEqual('<div><p>45</p></div>')
+  })
+
+  it.skip('fragment siblings multiple deep level 2', () => {
+    let hook: VHook | null
+    let i = 0
+    const Foo = () => {
+      hook = current.hook
+      return (
+        <>
+          {i++}
+          {i++}
+        </>
+      )
+    }
+    render(
+      <div>
+        <p>
+          {[1, 2, 3].map(x => (
+            <Foo key={x} />
+          ))}
+        </p>
+      </div>,
+      c
+    )
+    expect(c.innerHTML).toEqual('<div><p>012345</p></div>')
+    trigger(hook!)
+    expect(c.innerHTML).toEqual('<div><p>012367</p></div>')
+  })
+
+  it('fragment siblings multiple deep level 2 under element', () => {
+    let hook: VHook | null
+    let i = 0
+    const Foo = () => {
+      hook = current.hook
+      return (
+        <>
+          {i++}
+          {i++}
+        </>
+      )
+    }
+    render(
+      <div>
+        <p>
+          {[1, 2, 3].map(x => (
+            <li key={x}>
+              <Foo key={x} />
+            </li>
+          ))}
+        </p>
+      </div>,
+      c
+    )
+    expect(c.innerHTML).toEqual(
+      '<div><p><li>01</li><li>23</li><li>45</li></p></div>'
+    )
+    trigger(hook!)
+    expect(c.innerHTML).toEqual(
+      '<div><p><li>01</li><li>23</li><li>67</li></p></div>'
+    )
   })
 })

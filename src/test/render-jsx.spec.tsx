@@ -14,7 +14,7 @@ describe('jsx', () => {
             <Foo key={x} />
           ))}
         </>,
-        c,
+        c
       )
       const lis: any = Array.from(c.childNodes)
       expect(lis[0].nodeName).toEqual('LI')
@@ -24,7 +24,7 @@ describe('jsx', () => {
             <Foo key={x} />
           ))}
         </>,
-        c,
+        c
       )
       const res: any = Array.from(c.childNodes)
       expect(res[1]).toBe(lis[0])
@@ -40,7 +40,7 @@ describe('jsx', () => {
             <Foo key={x} value={x} />
           ))}
         </>,
-        c,
+        c
       )
       const lis: any = Array.from(c.childNodes)
       expect(lis[0].nodeName).toEqual('LI')
@@ -50,7 +50,7 @@ describe('jsx', () => {
             <Foo key={x} value={x} />
           ))}
         </>,
-        c,
+        c
       )
       const res: any = Array.from(c.childNodes)
       expect(res[1]).toBe(lis[0])
@@ -61,5 +61,69 @@ describe('jsx', () => {
       expect(res[2].textContent).toEqual('2')
       expect(res[3].textContent).toEqual('3')
     }
+  })
+
+  it('complex case 2', () => {
+    const i = 10
+    const prop = 'foo'
+    const onClick = () => {
+      /* void */
+    }
+
+    const randomly = () => Math.random() - 0.5
+
+    const count = 10
+    const v = (
+      <div key={i} randomattr={i}>
+        <span className={prop}>{i}</span>
+        and some text
+        <input autoFocus={i % 5 === 0} type="text" />
+        <img
+          crossOrigin="anonymous"
+          title="more"
+          alt="to make it realistic"
+          width="300"
+        />
+        <div>
+          more
+          <>
+            {Array(count * 2 - i * 2)
+              .fill(0)
+              .map((_, i: number) => (
+                <div key={i}>
+                  nesting<div>!!!</div>
+                </div>
+              ))
+              .sort(randomly)}
+          </>
+        </div>
+        <ul>
+          {Array(i * 2)
+            .fill(0)
+            .map((_, ii: number) => (
+              <li
+                key={ii}
+                onClick={i % 5 === 0 ? onClick : null}
+                style={
+                  i % 3 !== 0
+                    ? {
+                        width: '200px',
+                        height: '50px',
+                        color: 'blue',
+                        background: 'red',
+                        overflow: 'hidden',
+                      }
+                    : { height: '250px', color: 'blue' }
+                }
+              >
+                {i}
+              </li>
+            ))
+            .sort(randomly)}
+        </ul>
+      </div>
+    )
+    render(v, c)
+    expect(c.firstChild.nodeName).toEqual('DIV')
   })
 })

@@ -88,7 +88,7 @@ const nextTick = (fn: any) =>
     setTimeout(() => {
       fn()
       resolve()
-    }, 0),
+    }, 0)
   )
 
 const create = (count: number, name: string) => {
@@ -148,8 +148,8 @@ const bench = async () => {
           add(c, async () => {
             ;[h, r, Fragment] = cases[c]
             create(count, c)
-          }),
-        ),
+          })
+        )
     )
   }
 }

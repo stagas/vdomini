@@ -1,11 +1,10 @@
 /** @jsx h */
 /** @jsxFrag Fragment */
 
-import { h, Fragment, render, current, trigger } from 'vdomini'
+import { h, Fragment, render, current, trigger, VHook } from 'vdomini'
 
 const useCallback = (fn: () => void) => {
   const hook = useHook()
-  debugger
   return () => {
     fn()
     hook()
@@ -14,7 +13,7 @@ const useCallback = (fn: () => void) => {
 
 const useHook = () => {
   const hook = current.hook
-  return () => trigger(hook!)
+  return () => trigger(hook as VHook)
 }
 
 let inputValue = ''

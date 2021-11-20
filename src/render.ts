@@ -1,35 +1,104 @@
+import type { VNode, VProps, VChild } from './h'
 import { toCssText, xhtml, svg } from './util'
 import { Fragment } from './h'
-import type {
-  VNode,
-  VNodeObject,
-  VProps,
-  VChild,
-  FunctionalComponent,
-} from './h'
-import { VHook } from '.'
+
+//
+//
+// utility types
+//
+//
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Any = any
 
+interface SafeMap<K extends object, T> extends Map<K, T> {
+  has(v: K): boolean
+  get(v: K): T
+}
+
+interface SafeWeakMap<K extends object, T> extends WeakMap<K, T> {
+  has(v: K): boolean
+  get(v: K): T
+}
+
+//
+//
+// business logic types
+//
+//
+
+export interface VHook {
+  parent: Element
+  child: Element | Text
+  vNode: VNode
+  doc: VObjectNode['doc']
+}
+
+export interface VObjectText {
+  create(): Text
+  replace(parent: Element, child: Element): void
+  text: string
+}
+
+export interface VObjectNode {
+  create(): Element
+  replace(parent: Element, child: Element): void
+  doc: typeof xhtml
+  type: string
+  props: VNode['props']
+  children: VObject[] & { keyed?: boolean }
+}
+
+export interface VObjectKeyedNode extends VObjectNode {
+  props: VObjectNode['props'] & { key: object }
+}
+
+export type VObjectAny = (VObjectNode | VObjectText) & VObjectInterface
+
+export type VObject = Partial<VObjectText> &
+  Partial<VObjectNode> &
+  Partial<VObjectKeyedNode> &
+  VObjectInterface
+
+export type VObjectInterface = {
+  create<T>(this: T): Element | Text
+  replace<T>(this: T, parent: Element, child: Element | Text): void
+}
+
+//
+//
 // singletons
+//
+//
 
 const touched = new Set<object>()
 
+//
+//
 // caches
+//
+//
 
 type PropCacheItem = {
   attrs: Record<string, Attr>
   props: Record<string, unknown>
 }
-const propCache = new WeakMap<object, PropCacheItem>()
+const propCache = new WeakMap() as SafeWeakMap<object, PropCacheItem>
 
-type ListCacheItem = Map<object, { i: number; el: Element }>
-const listCache = new WeakMap<Node, ListCacheItem>()
+type ListKey = { i: number; el: Element }
+type ListKeysCache = SafeMap<object, ListKey>
+const listKeysCache = new WeakMap() as SafeWeakMap<Node, ListKeysCache>
 
-export const hookCache = new WeakMap<VNode, VHook>()
+const hookCache = new WeakMap() as SafeWeakMap<
+  VNode | VObject | VObjectText | VObjectNode,
+  Partial<VHook>
+>
 
+//
+//
 // props
+//
+//
 
 const createProp = (
   el: Element,
@@ -37,8 +106,14 @@ const createProp = (
   type: string,
   name: string,
   value: unknown,
-  attrs: Record<string, Attr>,
+  attrs: Record<string, Attr>
 ) => {
+  // all the Any's below are on purpose
+  // all the cases should be taken care of,
+  // but since this is user input they are allowed
+  // to do something wrong and we want to raise an
+  // exception and get a stack trace back here.
+
   // special cases
   switch (name) {
     case 'key':
@@ -65,24 +140,35 @@ const createProp = (
       // doing it this way retains the exact string and
       // is faster.
       el.setAttribute('style', value as string)
+      // we know there is an attribute node because we
+      // just set it
       attrs.style = el.getAttributeNode('style')!
       return
   }
 
+  //
   // create prop
+  //
+
+  // we used to normalize the attribute name
+  // but now we don't. because there is a high
+  // probability we will need a version that
+  // normalizes attribute names we leave it here
+  // commented (attr)
   const attr = name //toAttr[name] || name
+
   let node
   switch (typeof value) {
     case 'string':
     case 'number':
       el.setAttributeNode(
-        (node = attrs[name] = doc.createAttribute.call(document, attr)),
+        (node = attrs[name] = doc.createAttribute.call(document, attr))
       )
       node.value = value as string
       return
     case 'function':
       el.setAttributeNode(
-        (node = attrs[name] = doc.createAttribute.call(document, attr)),
+        (node = attrs[name] = doc.createAttribute.call(document, attr))
       )
       node.value = ''
       ;(el as Any)[attr] = value
@@ -90,7 +176,7 @@ const createProp = (
     case 'boolean':
       if (value) {
         el.setAttributeNode(
-          (node = attrs[name] = doc.createAttribute.call(document, attr)),
+          (node = attrs[name] = doc.createAttribute.call(document, attr))
         )
         node.value = ''
       }
@@ -105,7 +191,7 @@ const createProps = (
   doc: typeof xhtml,
   type: string,
   props: Record<string, unknown>,
-  attrs: Record<string, Attr> = {},
+  attrs: Record<string, Attr> = {}
 ) => {
   for (const name in props) createProp(el, doc, type, name, props[name], attrs)
   propCache.set(el, { props, attrs })
@@ -115,15 +201,15 @@ const updateProps = (
   el: Element,
   doc: typeof xhtml,
   type: string,
-  next: VProps,
+  next: VProps
 ) => {
   if (!propCache.has(el)) return next && createProps(el, doc, type, next)
 
-  const c = propCache.get(el)!
+  const c = propCache.get(el)
   const { attrs, props } = c
   if (!next) {
     for (const name in attrs) el.removeAttributeNode(attrs[name])
-    for (const name in props) delete el[name as keyof Element]
+    for (const name in props) delete (el as Any)[name]
     propCache.delete(el)
     return
   }
@@ -132,7 +218,7 @@ const updateProps = (
   out: for (const name in props) {
     // removed prop
     if (!(name in next)) {
-      delete el[name as keyof Element]
+      delete (el as Any)[name]
       continue
     }
 
@@ -185,46 +271,61 @@ const updateProps = (
   c.props = next
 }
 
+//
+//
 // expand vdom to their primitives
+//
+//
 
 const expand = (
-  vNode: VNode['children'] | VChild,
-  doc = xhtml,
-): VNodeObject['children'] => {
-  switch (typeof vNode) {
+  v: VNode['children'] | VChild,
+  doc = xhtml
+): VObjectNode['children'] => {
+  switch (typeof v) {
     case 'string':
-    case 'number':
-      return [vNode.toString()]
+    case 'number': {
+      return [
+        {
+          create: createText,
+          replace: replaceText,
+          text: '' + v,
+        } as VObject & VObjectText,
+      ]
+    }
     case 'boolean':
-    case 'undefined':
-      return ['']
+    case 'undefined': {
+      return [
+        {
+          create: createText,
+          replace: replaceText,
+          text: '',
+        } as VObject & VObjectText,
+      ]
+    }
   }
 
-  if (Array.isArray(vNode)) {
-    const result: VNodeObject['children'] = []
-    for (let i = 0; i < vNode.length; i++) result.push(...expand(vNode[i], doc))
-    result.keyed = (result[0] as VNode)?.props?.key != null
+  if (Array.isArray(v)) {
+    const result: VObjectNode['children'] = []
+    for (let i = 0; i < v.length; i++) result.push(...expand(v[i], doc))
+    result.keyed = result[0]?.props?.key != null
     return result
   }
 
-  const type = vNode.type
+  const type = v.type
+
+  // TODO: when a custom element constructor is passed
+  // we should check if it is instanceof HTMLElement here
 
   if (typeof type === 'function') {
     // enables reactive updates as the function component that runs below
     // can access through the export `current.hook`.
-    const hook: VHook = (current.hook = {
-      vNode,
-      doc,
-      top: current.top!,
-    }) // TODO: only gather when requested with a getHook()
+    // TODO: only gather when requested with a getHook() ?
+    const hook: Partial<VHook> = (current.hook = { vNode: v, doc })
 
-    const v = (vNode.type as FunctionalComponent)({
-      ...vNode.props,
-      children: vNode.children,
-    })
+    const vNode = type({ ...v.props, children: v.children })
 
     // keep a pointer to the vNode data for later reactive partial updates
-    hookCache.set(v, hook)
+    hookCache.set(vNode, hook)
 
     // this is a weird situation.
     // we special case "key" because when "expanding" the
@@ -235,158 +336,183 @@ const expand = (
     // we want to be able to create lists of arbitrary components
     // but they have to be given the "key" from the parent component
     // so this is what is happening here.
-    if (vNode.props?.key != null) v.props = { key: vNode.props.key }
+    if (v.props?.key != null) vNode.props = { key: v.props.key }
 
-    return expand(v, doc)
+    return expand(vNode, doc)
   }
 
   switch (type) {
-    case Fragment:
-      return expand(vNode.children, doc)
+    case Fragment: {
+      const children = expand(v.children, doc)
+      if (hookCache.has(v)) hookCache.set(children[0], hookCache.get(v))
+      return children
+    }
     case 'svg': // svg namespace entry
       doc = svg
     default:
-      if (vNode.props?.style) {
-        if (typeof vNode.props.style === 'object') {
-          vNode.props.style = toCssText(
-            vNode.props.style as CSSStyleDeclaration,
-          )
+      if (v.props?.style) {
+        if (typeof v.props.style === 'object') {
+          v.props.style = toCssText(v.props.style as CSSStyleDeclaration)
         }
       }
 
-      const vNodeObject = {
+      const vObject: VObjectNode = {
+        create: createNode,
+        replace: replaceNode,
         doc,
-        type,
-        props: vNode.props,
+        type: type as string, // it's never symbol here we short circuit at Fragment ^
+        props: v.props,
         children: expand(
-          vNode.children,
+          v.children,
           // svg namespace exodus
-          (type === 'foreignObject' && xhtml) || doc,
+          (type === 'foreignObject' && xhtml) || doc
         ),
-      } as VNodeObject
+      }
 
-      // populate with reference for reactive updates
-      if (hookCache.has(vNode))
-        hookCache.set(vNodeObject, hookCache.get(vNode)!)
+      // inherit hook from initial vNode
+      if (hookCache.has(v)) hookCache.set(vObject, hookCache.get(v))
 
-      return [vNodeObject]
+      return [vObject as VObject & VObjectNode]
   }
 }
 
+//
+//
 // (v)dom methods
+//
+//
 
-const create = ({ doc, type, props, children }: VNodeObject) => {
+function createText(this: VObjectText) {
+  return document.createTextNode(this.text)
+}
+
+function replaceText(
+  this: VObjectText,
+  parent: Element,
+  child: Element | Text
+) {
+  setHookParentChild(this, parent, child)
+  this.text !== child.nodeValue && (child.nodeValue = this.text)
+  return
+}
+
+function createNode(this: VObjectNode) {
+  const { doc, type, props, children } = this
   const child = doc.createElement.call(document, type)
   props && createProps(child, doc, type, props)
-  if (children.keyed) attach(child, children)
-  else for (let i = 0; i < children.length; i++) append(child, children[i])
+  if (children.keyed) attach(child, children as VObjectKeyedNode[])
+  else
+    for (let i = 0; i < children.length; i++)
+      append(child, children[i] as VObjectAny)
   return child
 }
 
-const append = (parent: Element, vNode: VNodeObject | string) => {
-  let child
-
-  if (typeof vNode === 'string') {
-    child = vNode
-  } else {
-    child = create(vNode)
-    setHookParentChild(vNode, parent, child)
-  }
-
-  parent.append(child)
-  return child
-}
-
-// TODO: this function has to be exposed in order for
-// reactive programming to be possible with partial updates
-const replace = (
-  parent: Element,
-  child: Element,
-  vNode: VNodeObject | string,
-) => {
-  if (typeof vNode === 'string') {
-    vNode !== child.nodeValue && (child.nodeValue = vNode)
-    return
-  }
-
-  if (child.nodeName.toUpperCase() !== vNode.type.toUpperCase()) {
-    const v = create(vNode)
-    setHookParentChild(vNode, parent, v)
+function replaceNode(this: VObjectNode, parent: Element, child: Element) {
+  if (child.nodeName.toUpperCase() !== this.type.toUpperCase()) {
+    const v = this.create()
+    setHookParentChild(this, parent, child)
     parent.replaceChild(v, child)
     return
   }
 
   // enable reactive updates final step
+  setHookParentChild(this, parent, child)
+  updateProps(child, this.doc, this.type, this.props)
+  reconcile(child, this.children)
+}
+
+const append = (parent: Element, vNode: VObjectAny) => {
+  const child = vNode.create()
   setHookParentChild(vNode, parent, child)
-  updateProps(child, vNode.doc, vNode.type, vNode.props)
-  reconcile(child, vNode.children)
+  parent.append(child)
+  return child
 }
 
-const attach = (el: Element, children: VNodeObject['children']) => {
-  const keys: ListCacheItem = new Map()
+//
+//
+// dom reconciliation algorithms
+//
+//
+
+const attach = (el: Element, children: VObjectKeyedNode[]) => {
+  const keys: ListKeysCache = new Map()
   for (let i = 0; i < children.length; i++) {
-    const vNode = children[i] as VNodeObject
-    keys.set(vNode.props!.key as object, {
+    const vNode = children[i]
+    keys.set(vNode.props.key, {
       i,
-      el: append(el, vNode) as Element,
-    })
+      el: append(el, vNode as VObjectAny),
+    } as ListKey)
   }
-  listCache.set(el, keys)
+  listKeysCache.set(el, keys)
 }
 
-// dom reconciliation algorithm
+const reconcileList = (
+  parent: Element,
+  keys: ListKeysCache,
+  next: VObjectKeyedNode[]
+) => {
+  touched.clear()
 
-const reconcile = (parent: Element, next: VNodeObject['children']) => {
-  if (listCache.has(parent)) {
-    touched.clear()
-    const keys = listCache.get(parent)!
+  for (let i = 0, left: Element; i < next.length; i++) {
+    const vNode = next[i]
 
-    for (let i = 0, left: Element; i < next.length; i++) {
-      const vNode = next[i] as VNodeObject
+    const key = vNode.props.key
+    touched.add(key)
 
-      const key = vNode.props!.key as object
-      touched.add(key)
+    let child: Element
 
-      let child: Element
-      if (!keys.has(key)) {
-        // create
-        child = create(vNode)
+    if (!keys.has(key)) {
+      // create
+      child = vNode.create()
 
-        keys.set(key, { i, el: child })
+      keys.set(key, { i, el: child })
+      // we know left has been assigned because we're i>0
+      if (i) left!.after(child)
+      else parent.prepend(child)
+    } else {
+      const item = keys.get(key)
+
+      child = item.el
+
+      // update
+      updateProps(child, vNode.doc, vNode.type, vNode.props)
+      reconcile(child, vNode.children)
+
+      // move
+      if (item.i > i) {
+        item.i = i
+        // we know left has been assigned because we're i>0
         if (i) left!.after(child)
         else parent.prepend(child)
-      } else {
-        const item = keys.get(key)!
-        child = item.el
-
-        // update
-        updateProps(child, vNode.doc, vNode.type, vNode.props)
-        reconcile(child, vNode.children)
-
-        // move
-        if (item.i > i) {
-          item.i = i
-          if (i) left!.after(child)
-          else parent.prepend(child)
-        }
-      }
-
-      setHookParentChild(vNode, parent, child)
-
-      left = child
-    }
-
-    for (const key of keys.keys()) {
-      // remove
-      if (!touched.has(key)) {
-        parent.removeChild(keys.get(key)!.el)
-        keys.delete(key)
       }
     }
 
+    setHookParentChild(vNode, parent, child)
+
+    left = child
+  }
+
+  for (const key of keys.keys()) {
+    // remove
+    if (!touched.has(key)) {
+      parent.removeChild(keys.get(key).el)
+      keys.delete(key)
+    }
+  }
+}
+
+const reconcile = (parent: Element, next: VObjectNode['children']) => {
+  if (listKeysCache.has(parent)) {
+    reconcileList(
+      parent,
+      listKeysCache.get(parent),
+      // we know it is a keyed node list because it was detected earlier
+      // and it's presumed that the contract will not change
+      next as VObjectKeyedNode[]
+    )
     return
   } else if (next.keyed) {
-    attach(parent, next)
+    attach(parent, next as VObjectKeyedNode[])
     return
   }
 
@@ -394,40 +520,49 @@ const reconcile = (parent: Element, next: VNodeObject['children']) => {
   const prevLength = prev.length
 
   if (next.length >= prevLength) {
-    for (let i = 0; i < prevLength; i++) replace(parent, prev[i], next[i])
-    for (let i = prevLength; i < next.length; i++) append(parent, next[i])
+    for (let i = 0; i < prevLength; i++) next[i].replace(parent, prev[i])
+    for (let i = prevLength; i < next.length; i++)
+      append(parent, next[i] as VObjectAny)
   } else {
-    for (let i = next.length; i < prevLength; i++)
-      parent.removeChild(parent.lastChild!)
-    for (let i = 0; i < next.length; i++) replace(parent, prev[i], next[i])
+    const remove = []
+    for (let i = next.length; i < prevLength; i++) remove.push(prev[i])
+    for (let i = 0; i < remove.length; i++) parent.removeChild(remove[i])
+    for (let i = 0; i < next.length; i++) next[i].replace(parent, prev[i])
   }
 }
 
+//
+//
 // hooks
+//
+//
 
 export const current: {
-  hook: VHook | null
-  top: Element | null
-} = { hook: null, top: null }
+  hook: Partial<VHook> | null
+} = { hook: null }
 
-const setHookParentChild = (vNode: VNode, parent: Element, child: Element) => {
+const setHookParentChild = (
+  vNode: VObjectNode | VObjectText,
+  parent: Element,
+  child: Element | Text
+) => {
   if (!hookCache.has(vNode)) return
-  const hook = hookCache.get(vNode)!
+  const hook = hookCache.get(vNode)
   hook.parent = parent
   hook.child = child
 }
 
 export const trigger = (hook: VHook) => {
-  if (hook.parent && hook.child) {
-    replace(hook.parent!, hook.child!, expand(hook.vNode, hook.doc)[0])
-  } else {
-    reconcile(hook.top!, expand(hook.vNode))
-  }
+  const vNode = expand(hook.vNode, hook.doc)
+  if (vNode.length > 1) reconcile(hook.parent, vNode)
+  else vNode[0].replace(hook.parent, hook.child)
 }
 
+//
+//
 // entry point render vdom to dom element
+//
+//
 
-export const render = (vNode: VNode, el: Element) => {
-  current.top = el
+export const render = (vNode: VNode, el: Element) =>
   reconcile(el, expand(vNode))
-}
