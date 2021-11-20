@@ -39,6 +39,7 @@
     "build": "npm run clean && npm run build:cjs && npm run build:esm && echo done.",
     "docs": "documentation readme src --resolve=node --pe ts --re ts --re d.ts --github --section=API --markdown-toc-max-depth=3",
     "test": "jest",
+    "test:web": "web-test-runner",
     "cov": "jest --coverage",
     "bench": "fpick benchmark --repeat -- benny-vipu --min 20 -fc",
     "example": "fpick example --repeat -- node -r @swc-node/register",
@@ -59,15 +60,18 @@
     "prepare": "husky install"
   },
   "devDependencies": {
-    "@swc-node/jest": "^1.4.0",
+    "@swc-node/jest": "^1.4.1",
     "@swc-node/register": "^1.4.0",
     "@tsconfig/node16": "^1.0.2",
-    "@types/jest": "^27.0.2",
-    "@types/node": "^16.11.7",
-    "@typescript-eslint/eslint-plugin": "^5.3.1",
-    "@typescript-eslint/parser": "^5.3.1",
+    "@types/jest": "^27.0.3",
+    "@types/node": "^16.11.9",
+    "@typescript-eslint/eslint-plugin": "^5.4.0",
+    "@typescript-eslint/parser": "^5.4.0",
+    "@web/dev-server-esbuild": "^0.2.16",
+    "@web/test-runner": "^0.13.22",
     "benny": "^3.7.1",
     "benny-ascii-chart-reporter": "^1.0.1",
+    "benny-vipu": "^1.1.0",
     "documentation": "^13.2.5",
     "esbuild": "^0.13.14",
     "eslint": "^8.2.0",
@@ -78,6 +82,7 @@
     "inferno": "^8.0.0-alpha.2",
     "inferno-create-element": "^8.0.0-alpha.2",
     "jest": "^27.3.1",
+    "jest-browser-globals": "^25.1.0-beta",
     "onchange": "^7.1.0",
     "preact": "^10.5.15",
     "prettier": "^2.4.1",
@@ -86,15 +91,9 @@
     "rimraf": "^3.0.2",
     "terser": "^5.10.0",
     "ts-node": "^10.4.0",
-    "typescript": "^4.4.4"
+    "typescript": "^4.5.2"
   },
   "dependencies": {
-    "benny-vipu": "^1.1.0",
-    "camelcase-to-kebab": "^1.0.0",
-    "html-event-attributes": "^2.0.1",
-    "html-tag-names": "^2.0.1",
-    "kebab-to-camel": "^1.0.0",
-    "property-information": "^6.1.1",
-    "svg-tag-names": "^3.0.1"
+    "camelcase-to-kebab": "^1.0.0"
   }
 }
