@@ -31,16 +31,6 @@ interface SafeWeakMap<K extends object, T> extends WeakMap<K, T> {
  * A hook that enables reactive programming. It can
  * be obtained using the export {@link current.hook}
  * from inside a functional component.
- *
- * ```ts
- * let hook
- * const Foo = () => {
- *   hook = current.hook
- *   return <p>{content}</p>
- * }
- * render(<Foo />, c)
- * trigger(hook)
- * ```
  */
 export interface VHook {
   parent: Element
@@ -577,6 +567,16 @@ const setHookParentChild = (
 /**
  * Triggers a rerender on a hook.
  *
+ * ```ts
+ * let hook
+ * const Foo = () => {
+ *   hook = current.hook
+ *   return <p>{content}</p>
+ * }
+ * render(<Foo />, c)
+ * trigger(hook)
+ * ```
+ *
  * @param hook The hook to trigger
  */
 export const trigger = (hook: VHook) => {
@@ -593,6 +593,10 @@ export const trigger = (hook: VHook) => {
 
 /**
  * Renders a vNode on an html Element.
+ *
+ * ```ts
+ * render(<p>hello world</p>, document.body)
+ * ```
  *
  * @param vNode The virtual node to render
  * @param el The target element to render on

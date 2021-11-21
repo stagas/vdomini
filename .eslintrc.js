@@ -18,6 +18,7 @@ module.exports = {
     react: {
       pragma: 'h',
       fragment: 'Fragment',
+      version: '17',
     },
   },
   rules: {
