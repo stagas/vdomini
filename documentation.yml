@@ -7,8 +7,8 @@ toc:
   - current
   - h
   - Fragment
+  - FunctionalComponent
   - VNode
   - VType
   - VProps
   - VChild
-  - FunctionalComponent

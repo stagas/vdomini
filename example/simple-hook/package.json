@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "start": "vite --force"
+    "start": "vite --force --open"
   },
   "devDependencies": {
     "typescript": "^4.5.2",
