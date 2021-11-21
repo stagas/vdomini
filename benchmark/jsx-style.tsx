@@ -8,8 +8,8 @@ import { render as vdomini_r } from '../src/render'
 
 // import { h as preact_h, render as preact_r, Fragment as preact_f } from 'preact'
 
-import { render as inferno_r, Fragment as inferno_f } from 'inferno'
-import { createElement as inferno_h } from 'inferno-create-element'
+// import { render as inferno_r, Fragment as inferno_f } from 'inferno'
+// import { createElement as inferno_h } from 'inferno-create-element'
 
 // import { render as react_r } from 'react-dom'
 // import { createElement as react_h, Fragment as react_f } from 'react'
@@ -47,7 +47,7 @@ const nextTick = (fn: any) =>
     setTimeout(() => {
       fn()
       resolve()
-    }, 0),
+    }, 0)
   )
 
 const create = (count: number, name: string) => {
@@ -73,7 +73,7 @@ const cases: any = {
   vdomini: [vdomini_h, vdomini_r, vdomini_f],
   // react: [react_h, react_r, react_f],
   // preact: [preact_h, preact_r, preact_f],
-  inferno: [inferno_h, inferno_r, inferno_f],
+  // inferno: [inferno_h, inferno_r, inferno_f],
 }
 
 // bench
@@ -89,8 +89,8 @@ const bench = async () => {
           add(c, async () => {
             ;[h, r, Fragment] = cases[c]
             create(count, c)
-          }),
-        ),
+          })
+        )
     )
   }
 }

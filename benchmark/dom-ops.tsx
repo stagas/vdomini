@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { suite, add } from 'benny-vipu'
 
 const COUNT = 20_000
@@ -65,14 +66,13 @@ const cases: any = {
         document.createElement('div'),
         document.body.childNodes[
           (Math.random() * document.body.childNodes.length) | 0
-        ],
+        ]
       )
     }
   },
 
   after: (count: number) => {
     document.body.innerHTML = '<div></div>'
-    let el = document.body.firstChild
     for (let i = 0; i < count; i++) {
       document.body.childNodes[
         (Math.random() * document.body.childNodes.length) | 0
@@ -82,7 +82,6 @@ const cases: any = {
 
   before: (count: number) => {
     document.body.innerHTML = '<div></div>'
-    let el = document.body.firstChild
     for (let i = 0; i < count; i++) {
       document.body.childNodes[
         (Math.random() * document.body.childNodes.length) | 0
@@ -141,8 +140,8 @@ const bench = async () => {
             cases[c](count)
             // }
             console.timeEnd(c)
-          }),
-        ),
+          })
+        )
     )
   }
 }

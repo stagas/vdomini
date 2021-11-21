@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { suite, add } from 'benny-vipu'
@@ -65,8 +66,8 @@ const bench = async () => {
         .map(c =>
           add(c, () => {
             cases[c](count)
-          }),
-        ),
+          })
+        )
     )
   }
 }

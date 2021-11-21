@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { suite, add } from 'benny-vipu'
 import { h as vdomini } from '../src/h'
 
@@ -57,8 +58,8 @@ const bench = async () => {
           add(c, () => {
             h = cases[c]
             create(count)
-          }),
-        ),
+          })
+        )
     )
   }
 }

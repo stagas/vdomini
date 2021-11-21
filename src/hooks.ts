@@ -4,7 +4,7 @@ import { current, trigger, VHook } from './render'
  * Returns a callback that will trigger
  * a rerender on the current component.
  *
- * ```ts
+ * ```tsx
  * let clicked = 0
  * const Foo = () => <>
  *   {clicked++}
@@ -23,7 +23,7 @@ export const useHook = () => {
  * Wraps a function along with a hook
  * so when called will also trigger that hook.
  *
- * ```ts
+ * ```tsx
  * let clicked = 0
  * const Foo = () => {
  *   const inc = useCallback(() => clicked++)

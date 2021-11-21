@@ -29,7 +29,7 @@ interface SafeWeakMap<K extends object, T> extends WeakMap<K, T> {
 
 /**
  * A hook that enables reactive programming. It can
- * be obtained using the export {@link current.hook}
+ * be obtained using the export [current.hook](#hook)
  * from inside a functional component.
  */
 export interface VHook {
@@ -545,13 +545,20 @@ const reconcile = (parent: Element, next: VObjectNode['children']) => {
 //
 //
 
-/**
- * Holds a reference to a hook that can be triggered
- * later using {@link trigger}.
- */
-export const current: {
+interface Current {
   hook: Partial<VHook> | null
-} = { hook: null }
+}
+
+/**
+ * The `current` singleton.
+ */
+export const current: Current = {
+  /**
+   * Holds a reference to a hook that can
+   * be triggered later using {@link trigger}.
+   */
+  hook: null,
+}
 
 const setHookParentChild = (
   vNode: VObjectNode | VObjectText,
@@ -567,7 +574,7 @@ const setHookParentChild = (
 /**
  * Triggers a rerender on a hook.
  *
- * ```ts
+ * ```tsx
  * let hook
  * const Foo = () => {
  *   hook = current.hook
@@ -592,9 +599,9 @@ export const trigger = (hook: VHook) => {
 //
 
 /**
- * Renders a vNode on an html Element.
+ * Renders a virtual node on an html Element.
  *
- * ```ts
+ * ```tsx
  * render(<p>hello world</p>, document.body)
  * ```
  *
