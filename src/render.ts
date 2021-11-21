@@ -91,7 +91,10 @@ type PropCacheItem = {
 const propCache = new WeakMap() as SafeWeakMap<object, PropCacheItem>
 
 type ListKey = { i: number; el: Element }
-type ListKeysCache = SafeMap<object, ListKey>
+type ListKeysCache = {
+  prev: VObjectKeyedNode[]
+  keys: SafeMap<object, ListKey>
+}
 const listKeysCache = new WeakMap() as SafeWeakMap<Node, ListKeysCache>
 
 const hookCache = new WeakMap() as SafeWeakMap<
@@ -444,7 +447,7 @@ const append = (parent: Element, vNode: VObjectAny) => {
 //
 
 const attach = (el: Element, children: VObjectKeyedNode[]) => {
-  const keys: ListKeysCache = new Map()
+  const keys: SafeMap<object, ListKey> = new Map()
   for (let i = 0; i < children.length; i++) {
     const vNode = children[i]
     keys.set(vNode.props.key, {
@@ -452,15 +455,20 @@ const attach = (el: Element, children: VObjectKeyedNode[]) => {
       el: append(el, vNode as VObjectAny),
     } as ListKey)
   }
-  listKeysCache.set(el, keys)
+  listKeysCache.set(el, {
+    prev: children,
+    keys,
+  })
 }
 
 const reconcileList = (
   parent: Element,
-  keys: ListKeysCache,
+  cache: ListKeysCache,
   next: VObjectKeyedNode[]
 ) => {
   touched.clear()
+
+  const { prev, keys } = cache
 
   for (let i = 0, left: Element; i < next.length; i++) {
     const vNode = next[i]
@@ -478,9 +486,6 @@ const reconcileList = (
       // we know left has been assigned because we're i>0
       if (i) left!.after(child)
       else parent.prepend(child)
-      for (const it of keys.values()) {
-        if (it.i >= i) it.i++
-      }
     } else {
       const item = keys.get(key)
 
@@ -492,15 +497,12 @@ const reconcileList = (
 
       // move
       if (item.i > i) {
-        const oldi = item.i
+        keys.get(prev[i].props.key).i = item.i
         item.i = i
-        // we know left has been assigned because we're i>0
-        if (i) left!.after(child)
-        else parent.prepend(child)
-        for (const it of keys.values()) {
-          if (it.i >= i && it.i < oldi) it.i++
-        }
       }
+      // we know left has been assigned because we're i>0
+      if (i) left!.after(child)
+      else parent.prepend(child)
     }
 
     setHookParentChild(vNode, parent, child)
@@ -515,6 +517,8 @@ const reconcileList = (
       keys.delete(key)
     }
   }
+
+  cache.prev = next
 }
 
 const reconcile = (parent: Element, next: VObjectNode['children']) => {
