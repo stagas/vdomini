@@ -28,5 +28,6 @@ module.exports = {
       'error',
       { args: 'all', argsIgnorePattern: '^_' },
     ],
+    'react/no-unknown-property': 'off'
   },
 }

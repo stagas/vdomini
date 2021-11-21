@@ -129,4 +129,33 @@ describe('jsx', () => {
       expect(c.firstChild.nodeName).toEqual('DIV')
     }
   })
+
+  it('pass props correctly to children', () => {
+    let i = 0
+    const Foo = () => {
+      return <div class={i % 2 === 0 ? 'yes' : 'no'}>{i++}</div>
+    }
+    render(
+      <>
+        {[1, 2, 3].map(x => (
+          <Foo key={x} />
+        ))}
+      </>,
+      c
+    )
+    expect(c.innerHTML).toEqual(
+      '<div class="yes">0</div><div class="no">1</div><div class="yes">2</div>'
+    )
+    render(
+      <>
+        {[4, 5, 6].map(x => (
+          <Foo key={x} />
+        ))}
+      </>,
+      c
+    )
+    expect(c.innerHTML).toEqual(
+      '<div class="no">3</div><div class="yes">4</div><div class="no">5</div>'
+    )
+  })
 })

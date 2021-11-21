@@ -11,6 +11,32 @@ describe('render(v, el)', () => {
     expect(c.innerHTML).toEqual('<p></p>')
   })
 
+  it('p w/class', () => {
+    render({ type: 'p', props: { class: 'foo' }, children: [] }, c)
+    expect(c.innerHTML).toEqual('<p class="foo"></p>')
+  })
+
+  it('p w/class change', () => {
+    render({ type: 'p', props: { class: 'foo' }, children: [] }, c)
+    expect(c.innerHTML).toEqual('<p class="foo"></p>')
+    render({ type: 'p', props: { class: 'bar' }, children: [] }, c)
+    expect(c.innerHTML).toEqual('<p class="bar"></p>')
+  })
+
+  it('p w/class change empty', () => {
+    render({ type: 'p', props: { class: '' }, children: [] }, c)
+    expect(c.innerHTML).toEqual('<p class=""></p>')
+    render({ type: 'p', props: { class: 'bar' }, children: [] }, c)
+    expect(c.innerHTML).toEqual('<p class="bar"></p>')
+  })
+
+  it('p no class then w/class', () => {
+    render({ type: 'p', props: null, children: [] }, c)
+    expect(c.innerHTML).toEqual('<p></p>')
+    render({ type: 'p', props: { class: 'bar' }, children: [] }, c)
+    expect(c.innerHTML).toEqual('<p class="bar"></p>')
+  })
+
   it('custom elements not implemented', () => {
     expect(() => {
       render(

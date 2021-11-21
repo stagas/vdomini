@@ -345,7 +345,7 @@ const expand = (
     // we want to be able to create lists of arbitrary components
     // but they have to be given the "key" from the parent component
     // so this is what is happening here.
-    if (v.props?.key != null) vNode.props = { key: v.props.key }
+    if (v.props?.key != null) vNode.props = { key: v.props.key, ...vNode.props }
 
     return expand(vNode, doc)
   }
