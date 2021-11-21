@@ -1,4 +1,4 @@
-import type { VNode, VProps, VChild } from './h'
+import type { VNode, VProps, VChild, FunctionalComponent } from './h'
 import { toCssText, xhtml, svg } from './util'
 import { Fragment } from './h'
 
@@ -27,6 +27,21 @@ interface SafeWeakMap<K extends object, T> extends WeakMap<K, T> {
 //
 //
 
+/**
+ * A hook that enables reactive programming. It can
+ * be obtained using the export {@link current.hook}
+ * from inside a functional component.
+ *
+ * ```ts
+ * let hook
+ * const Foo = () => {
+ *   hook = current.hook
+ *   return <p>{content}</p>
+ * }
+ * render(<Foo />, c)
+ * trigger(hook)
+ * ```
+ */
 export interface VHook {
   parent: Element
   child: Element | Text
@@ -313,16 +328,20 @@ const expand = (
 
   const type = v.type
 
-  // TODO: when a custom element constructor is passed
-  // we should check if it is instanceof HTMLElement here
-
   if (typeof type === 'function') {
+    if (Object.getPrototypeOf(type) !== Function.prototype) {
+      throw new Error('CustomElement constructors are not implemented yet')
+    }
+
     // enables reactive updates as the function component that runs below
     // can access through the export `current.hook`.
     // TODO: only gather when requested with a getHook() ?
     const hook: Partial<VHook> = (current.hook = { vNode: v, doc })
 
-    const vNode = type({ ...v.props, children: v.children })
+    const vNode = (type as FunctionalComponent)({
+      ...v.props,
+      children: v.children,
+    })
 
     // keep a pointer to the vNode data for later reactive partial updates
     hookCache.set(vNode, hook)
@@ -409,9 +428,9 @@ function createNode(this: VObjectNode) {
 
 function replaceNode(this: VObjectNode, parent: Element, child: Element) {
   if (child.nodeName.toUpperCase() !== this.type.toUpperCase()) {
-    const v = this.create()
-    setHookParentChild(this, parent, child)
-    parent.replaceChild(v, child)
+    const newChild = this.create()
+    setHookParentChild(this, parent, newChild)
+    parent.replaceChild(newChild, child)
     return
   }
 
@@ -524,9 +543,8 @@ const reconcile = (parent: Element, next: VObjectNode['children']) => {
     for (let i = prevLength; i < next.length; i++)
       append(parent, next[i] as VObjectAny)
   } else {
-    const remove = []
-    for (let i = next.length; i < prevLength; i++) remove.push(prev[i])
-    for (let i = 0; i < remove.length; i++) parent.removeChild(remove[i])
+    for (let i = next.length; i < prevLength; i++)
+      parent.removeChild(parent.lastChild!)
     for (let i = 0; i < next.length; i++) next[i].replace(parent, prev[i])
   }
 }
@@ -537,6 +555,10 @@ const reconcile = (parent: Element, next: VObjectNode['children']) => {
 //
 //
 
+/**
+ * Holds a reference to a hook that can be triggered
+ * later using {@link trigger}.
+ */
 export const current: {
   hook: Partial<VHook> | null
 } = { hook: null }
@@ -552,6 +574,11 @@ const setHookParentChild = (
   hook.child = child
 }
 
+/**
+ * Triggers a rerender on a hook.
+ *
+ * @param hook The hook to trigger
+ */
 export const trigger = (hook: VHook) => {
   const vNode = expand(hook.vNode, hook.doc)
   if (vNode.length > 1) reconcile(hook.parent, vNode)
@@ -564,5 +591,12 @@ export const trigger = (hook: VHook) => {
 //
 //
 
-export const render = (vNode: VNode, el: Element) =>
+/**
+ * Renders a vNode on an html Element.
+ *
+ * @param vNode The virtual node to render
+ * @param el The target element to render on
+ */
+export const render = (vNode: VNode, el: Element) => {
   reconcile(el, expand(vNode))
+}

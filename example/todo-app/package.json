@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "start": "vite --force"
+  },
+  "devDependencies": {
+    "typescript": "^4.5.2",
+    "vdomini": "*",
+    "vite": "^2.6.14"
+  }
+}

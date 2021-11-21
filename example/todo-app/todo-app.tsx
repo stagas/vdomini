@@ -1,20 +1,8 @@
+/* eslint-disable react/no-unknown-property */
 /** @jsx h */
 /** @jsxFrag Fragment */
 
-import { h, Fragment, render, current, trigger, VHook } from 'vdomini'
-
-const useCallback = (fn: () => void) => {
-  const hook = useHook()
-  return () => {
-    fn()
-    hook()
-  }
-}
-
-const useHook = () => {
-  const hook = current.hook
-  return () => trigger(hook as VHook)
-}
+import { h, Fragment, render, useCallback, useHook } from 'vdomini'
 
 let inputValue = ''
 
@@ -93,7 +81,7 @@ const TodoApp = ({ todos }: { todos: Todo[] }) => {
         type="string"
         value={inputValue}
         autofocus
-        oninput={(e: InputEvent) => {
+        oninput={() => {
           inputValue = inputRef.current!.value
         }}
         onkeydown={(e: KeyboardEvent) => {

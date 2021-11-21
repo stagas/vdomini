@@ -1,3 +1,1 @@
 - [ ] custom element constructors
-- [ ] Test replaceNode hook retainment
-- [ ] Test removeChild prev[i] issue

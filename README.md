@@ -1,7 +1,7 @@
 <h1 align="center">vdomini</h1>
 
 <p align="center">
-mini jsx-compatible virtual dom
+mini jsx virtual dom
 </p>
 
 <p align="center">
@@ -27,23 +27,38 @@ $ npm i vdomini
 
 - **Fast. Stable. Predictable.**
 
-- **No surprises.**
+- **No surprises!**
 
 - **Compact. Readable. Hackable.**
 
 - **Minimal error surface -** With code as little as possible there can only be a handful of ways that
-  something can go wrong and when it does it won't be because _"Issue [#47665]()"_ hasn't been resolved yet.
+  something can go wrong and when it does it won't be because _"Issue [#47665](https://www.youtube.com/watch?v=dQw4w9WgXcQ)"_ hasn't been resolved yet.
 
-- When an error occurs you can **inspect** it, you're always one navigation away from its [**readable source code**]()
+- When an error occurs you can **inspect** it, you're always one navigation away from its [**readable source code**](src/render.ts)
   and the understanding of what caused it and possibly **how to solve it**.
 
 - **No bells and whistles -** All operations are as close as possible to the **Real DOM(tm)**. No fibers, monads,
-  queues, portals, signals, no tons of layers of complexity between your **_intention_** and the **_operation_**.
+  queues, portals, no tons of layers of complexity between your **_intention_** and the **_operation_**.
 
 - **No learning curve -** You already know how to write HTML and to manipulate it using JavaScript.
   This is only abstracting **_a few_** DOM operations, which you also already know.
 
-- **No setup -** There are no plugins, transformers, transpilations that you need to learn or specific tools you need to use, besides TypeScript, which is excellent. If you're setup with TypeScript, then this is simply one npm install away. It's more like a library than a framework.
+- **No setup -** There are no plugins, transformers, transpilations that you need to learn or specific tools
+  you need to use, besides TypeScript, which is excellent.
+  If you're setup with TypeScript, then this is simply one npm install away. **_It's more like a library than a framework._**
+
+## Features
+
+- **Fast.**
+- **Tiny.** 1.5kb brotli.
+- **JSX** with **virtual dom**.
+- **Functional components** with props, like usual from React.
+- **Keyed lists** with **_fast_** reconciliation only touching the items that changed.
+- **Refs -** Passing any object to the `ref` attribute it will be injected a `current` property that corresponds
+  to the live dom element.
+- **Hooks -** Only the function component and its children where the hook was captured are going to be rerendered when it triggers.
+- **BYOB -** The hook API is simply holding a reference and using the trigger function. Any kind of hook can be implemented
+  using these primitives. [The very basic ones](src/hooks.ts) are included simply for convenience and as an example.
 
 ## Example
 
@@ -51,48 +66,27 @@ $ npm i vdomini
 /** @jsx h */
 /** @jsxFrag Fragment */
 
-import { h, Fragment, render } from 'vdomini'
+import { h, Fragment, render, useCallback } from 'vdomini'
 
-declare const task: HTMLInputElement
+let count = 0
 
-const addTodo = () =>
-  (todos.unshift({
-    id: Math.random(),
-    text: task.value,
-  }) &&
-    update()) ||
-  (task.value = '')
+const Counter = ({ count }) => {
+  const inc = useCallback(() => count++)
+  const dec = useCallback(() => count--)
+  return (
+    <>
+      count is: {count}
+      <br />
+      <button onclick={inc}>increase</button>
+      <button onclick={dec}>decrease</button>
+    </>
+  )
+}
 
-const Todo = ({ text }: { text: string }) => <li>{text}</li>
-
-const TodoApp = ({ todos }: { todos: Todos }) => (
-  <>
-    <h1>My Todo App</h1>
-    <input
-      id="task"
-      type="string"
-      autoFocus
-      onKeyDown={(e: KeyboardEvent) => {
-        e.key === 'Enter' && addTodo()
-      }}
-    ></input>
-    <button onClick={addTodo}>Add Todo</button>
-    <ul>
-      {todos.map(todo => (
-        <Todo key={todo.id} {...todo} />
-      ))}
-    </ul>
-  </>
-)
-
-type Todos = { id: number; text: string }[]
-
-const todos: Todos = []
-
-const update = () => render(<TodoApp todos={todos} />, document.body)
-
-update()
+render(<Counter {...state} />, document.body)
 ```
+
+A more complete example can be seen [here](example/todo-app/todo-app.tsx).
 
 ## API
 

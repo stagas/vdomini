@@ -18,7 +18,11 @@ declare global {
   }
 }
 
-export type VType = FunctionalComponent | string | symbol
+export type VType =
+  | FunctionalComponent
+  | CustomElementConstructor
+  | string
+  | symbol
 export type VProps = Record<string, unknown> | null | undefined
 export type VChild = VNode | string | number | boolean | undefined
 

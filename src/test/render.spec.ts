@@ -11,6 +11,15 @@ describe('render(v, el)', () => {
     expect(c.innerHTML).toEqual('<p></p>')
   })
 
+  it('custom elements not implemented', () => {
+    expect(() => {
+      render(
+        { type: class extends HTMLElement {}, props: null, children: [] },
+        c
+      )
+    }).toThrow('not implemented')
+  })
+
   it('svg', () => {
     render({ type: 'svg', props: null, children: [] }, c)
     expect(c.innerHTML).toEqual('<svg></svg>')
@@ -496,6 +505,45 @@ describe('render(v, el)', () => {
     expect(c.innerHTML).toEqual(
       '<ul><li id="second"></li><li id="third"></li><li id="first"></li></ul>'
     )
+  })
+
+  it('ul w/children w/ siblings then remove', () => {
+    render(
+      {
+        type: 'ul',
+        props: null,
+        children: [],
+      },
+      c
+    )
+    expect(c.innerHTML).toEqual('<ul></ul>')
+    render(
+      {
+        type: 'ul',
+        props: null,
+        children: [
+          'hello',
+          { type: 'li', props: { id: 'first', key: 1 }, children: [] },
+          { type: 'li', props: { id: 'second', key: 'foo' }, children: [] },
+          { type: 'li', props: { id: 'third', key: true }, children: [] },
+        ],
+      },
+      c
+    )
+    const prev = Array.from(c.querySelectorAll('li'))
+    expect(c.innerHTML).toEqual(
+      '<ul>hello<li id="first"></li><li id="second"></li><li id="third"></li></ul>'
+    )
+    expect(prev[0].id).toEqual('first')
+    render(
+      {
+        type: 'ul',
+        props: null,
+        children: ['hello'],
+      },
+      c
+    )
+    expect(c.innerHTML).toEqual('<ul>hello</ul>')
   })
 
   it('ul w/children keyed reorder', () => {

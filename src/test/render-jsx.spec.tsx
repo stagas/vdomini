@@ -64,17 +64,16 @@ describe('jsx', () => {
   })
 
   it('complex case 2', () => {
-    const i = 10
+    let i = 10
+
     const prop = 'foo'
     const onClick = () => {
       /* void */
     }
-
     const randomly = () => Math.random() - 0.5
 
-    const count = 10
-    const v = (
-      <div key={i} randomattr={i}>
+    const factory = () => (
+      <div key={i}>
         <span className={prop}>{i}</span>
         and some text
         <input autoFocus={i % 5 === 0} type="text" />
@@ -123,7 +122,11 @@ describe('jsx', () => {
         </ul>
       </div>
     )
-    render(v, c)
-    expect(c.firstChild.nodeName).toEqual('DIV')
+
+    const count = 10
+    for (i = 0; i < count; i++) {
+      render(factory(), c)
+      expect(c.firstChild.nodeName).toEqual('DIV')
+    }
   })
 })
