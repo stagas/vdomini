@@ -478,6 +478,9 @@ const reconcileList = (
       // we know left has been assigned because we're i>0
       if (i) left!.after(child)
       else parent.prepend(child)
+      for (const it of keys.values()) {
+        if (it.i >= i) it.i++
+      }
     } else {
       const item = keys.get(key)
 
@@ -489,10 +492,14 @@ const reconcileList = (
 
       // move
       if (item.i > i) {
+        const oldi = item.i
         item.i = i
         // we know left has been assigned because we're i>0
         if (i) left!.after(child)
         else parent.prepend(child)
+        for (const it of keys.values()) {
+          if (it.i >= i && it.i < oldi) it.i++
+        }
       }
     }
 

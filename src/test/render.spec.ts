@@ -618,6 +618,113 @@ describe('render(v, el)', () => {
       '<ul><li id="second"></li><li id="third"></li><li id="first"></li></ul>'
     )
   })
+  it('ul w/children keyed swap', () => {
+    render(
+      {
+        type: 'ul',
+        props: null,
+        children: [
+          { type: 'li', props: { id: 'first', key: 1 }, children: [] },
+          { type: 'li', props: { id: 'second', key: 2 }, children: [] },
+          { type: 'li', props: { id: 'third', key: 3 }, children: [] },
+          { type: 'li', props: { id: 'four', key: 4 }, children: [] },
+          { type: 'li', props: { id: 'five', key: 5 }, children: [] },
+        ],
+      },
+      c
+    )
+    const prev = Array.from(c.querySelectorAll('li'))
+    expect(prev[0].id).toEqual('first')
+    expect(c.innerHTML).toEqual(
+      '<ul><li id="first"></li><li id="second"></li><li id="third"></li><li id="four"></li><li id="five"></li></ul>'
+    )
+    render(
+      {
+        type: 'ul',
+        props: null,
+        children: [
+          { type: 'li', props: { id: 'first', key: 1 }, children: [] },
+          { type: 'li', props: { id: 'four', key: 4 }, children: [] },
+          { type: 'li', props: { id: 'third', key: 3 }, children: [] },
+          { type: 'li', props: { id: 'second', key: 2 }, children: [] },
+          { type: 'li', props: { id: 'five', key: 5 }, children: [] },
+        ],
+      },
+      c
+    )
+    {
+      const next = Array.from(c.querySelectorAll('li'))
+      expect(prev[0].id).toEqual('first')
+      expect(prev[1].id).toEqual('second')
+      expect(prev[2].id).toEqual('third')
+      expect(prev[3].id).toEqual('four')
+      expect(prev[4].id).toEqual('five')
+
+      expect(next[0].id).toEqual('first')
+      expect(next[1].id).toEqual('four')
+      expect(next[2].id).toEqual('third')
+      expect(next[3].id).toEqual('second')
+      expect(next[4].id).toEqual('five')
+    }
+
+    render(
+      {
+        type: 'ul',
+        props: null,
+        children: [
+          { type: 'li', props: { id: 'first', key: 1 }, children: [] },
+          { type: 'li', props: { id: 'second', key: 2 }, children: [] },
+          { type: 'li', props: { id: 'third', key: 3 }, children: [] },
+          { type: 'li', props: { id: 'four', key: 4 }, children: [] },
+          { type: 'li', props: { id: 'five', key: 5 }, children: [] },
+        ],
+      },
+      c
+    )
+    {
+      const next = Array.from(c.querySelectorAll('li'))
+      expect(prev[0].id).toEqual('first')
+      expect(prev[1].id).toEqual('second')
+      expect(prev[2].id).toEqual('third')
+      expect(prev[3].id).toEqual('four')
+      expect(prev[4].id).toEqual('five')
+
+      expect(next[0].id).toEqual('first')
+      expect(next[1].id).toEqual('second')
+      expect(next[2].id).toEqual('third')
+      expect(next[3].id).toEqual('four')
+      expect(next[4].id).toEqual('five')
+    }
+
+    render(
+      {
+        type: 'ul',
+        props: null,
+        children: [
+          { type: 'li', props: { id: 'first', key: 1 }, children: [] },
+          { type: 'li', props: { id: 'four', key: 4 }, children: [] },
+          { type: 'li', props: { id: 'third', key: 3 }, children: [] },
+          { type: 'li', props: { id: 'second', key: 2 }, children: [] },
+          { type: 'li', props: { id: 'five', key: 5 }, children: [] },
+        ],
+      },
+      c
+    )
+    {
+      const next = Array.from(c.querySelectorAll('li'))
+      expect(prev[0].id).toEqual('first')
+      expect(prev[1].id).toEqual('second')
+      expect(prev[2].id).toEqual('third')
+      expect(prev[3].id).toEqual('four')
+      expect(prev[4].id).toEqual('five')
+
+      expect(next[0].id).toEqual('first')
+      expect(next[1].id).toEqual('four')
+      expect(next[2].id).toEqual('third')
+      expect(next[3].id).toEqual('second')
+      expect(next[4].id).toEqual('five')
+    }
+  })
 
   it('ul w/children keyed insert', () => {
     render(
