@@ -19,7 +19,7 @@ module.exports = {
     <html>
       <head>
         <script type="module" src="${testFramework}"></script>
-        <script type="module">import 'jest-browser-globals'</script>
+        <script type="module">import 'jest-browser-globals';</script>
       </head>
     </html>
   `,
