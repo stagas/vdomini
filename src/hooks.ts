@@ -37,7 +37,11 @@ export const useHook = () => {
  * @param fn Any function to wrap with the hook
  * @returns The callback function
  */
-export const useCallback = (fn: () => void) => {
+export const useCallback = (fn: (...args: unknown[]) => void) => {
   const hook = useHook()
-  return () => (fn(), hook())
+  return function (this: unknown, ...args: unknown[]) {
+    const result = fn.apply(this, args)
+    hook()
+    return result
+  }
 }

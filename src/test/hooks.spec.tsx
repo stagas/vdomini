@@ -481,4 +481,97 @@ describe('hooks', () => {
     fn()
     expect(c.firstChild.textContent).toEqual('2')
   })
+
+  it('useCallback passes arguments and this', () => {
+    let fn: any
+    let i = 0
+    let target
+    let self
+    const Foo = () => {
+      fn = useCallback(function (e) {
+        i++
+        target = e.target
+        self = this
+      })
+      return <button onclick={fn}>{i}</button>
+    }
+    render(<Foo />, c)
+    const button = c.firstChild
+    expect(button.nodeName).toEqual('BUTTON')
+    expect(button.textContent).toEqual('0')
+    button.click()
+    expect(button.textContent).toEqual('1')
+    expect(target).toBe(button)
+    expect(self).toBe(button)
+    expect(c.firstChild).toBe(button)
+    button.click()
+    expect(c.firstChild.textContent).toEqual('2')
+    expect(target).toBe(button)
+    expect(self).toBe(button)
+  })
+
+  it('useCallback return value on original handler (sanity)', () => {
+    let fn: any
+    let i = 0
+    let target
+    let self
+    let prevented = false
+    const onClick = e => {
+      prevented = e.defaultPrevented
+    }
+    const Foo = () => {
+      fn = useCallback(function (e) {
+        i++
+        target = e.target
+        self = this
+      })
+      return (
+        <div onclick={onClick}>
+          <button onclick={fn}>{i}</button>
+        </div>
+      )
+    }
+    render(<Foo />, c)
+    const button = c.firstChild.firstChild
+    expect(button.nodeName).toEqual('BUTTON')
+    expect(button.textContent).toEqual('0')
+    button.click()
+    expect(button.textContent).toEqual('1')
+    expect(target).toBe(button)
+    expect(self).toBe(button)
+    expect(prevented).toBe(false)
+  })
+
+  it('useCallback return value on original handler (return false)', () => {
+    let fn: any
+    let i = 0
+    let target
+    let self
+    let prevented = false
+    const onClick = e => {
+      prevented = e.defaultPrevented
+    }
+    const Foo = () => {
+      fn = useCallback(function (e) {
+        i++
+        target = e.target
+        self = this
+        return false
+      })
+      return (
+        <div onclick={onClick}>
+          <button onclick={fn}>{i}</button>
+        </div>
+      )
+    }
+    render(<Foo />, c)
+    const button = c.firstChild.firstChild
+    expect(button.nodeName).toEqual('BUTTON')
+    expect(button.textContent).toEqual('0')
+    button.click()
+    expect(button.textContent).toEqual('1')
+    expect(target).toBe(button)
+    expect(self).toBe(button)
+    expect(prevented).toBe(true)
+  })
 })
