@@ -488,7 +488,7 @@ describe('hooks', () => {
     let target
     let self
     const Foo = () => {
-      fn = useCallback(function (e) {
+      fn = useCallback(function (this: any, e: any) {
         i++
         target = e.target
         self = this
@@ -516,11 +516,11 @@ describe('hooks', () => {
     let target
     let self
     let prevented = false
-    const onClick = e => {
+    const onClick = (e: any) => {
       prevented = e.defaultPrevented
     }
     const Foo = () => {
-      fn = useCallback(function (e) {
+      fn = useCallback(function (this: any, e: any) {
         i++
         target = e.target
         self = this
@@ -548,11 +548,11 @@ describe('hooks', () => {
     let target
     let self
     let prevented = false
-    const onClick = e => {
+    const onClick = (e: any) => {
       prevented = e.defaultPrevented
     }
     const Foo = () => {
-      fn = useCallback(function (e) {
+      fn = useCallback(function (this: any, e: any) {
         i++
         target = e.target
         self = this
