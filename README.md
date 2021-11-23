@@ -124,7 +124,7 @@ A more complete example can be seen [here](example/todo-app/todo-app.tsx).
 
 ### render
 
-[src/render.ts:622-624](https://github.com/stagas/vdomini/blob/78b6151e18da16dc27d833f13acdbc5e3d8e7191/src/render.ts#L622-L624 "Source code on GitHub")
+[src/render.ts:622-624](https://github.com/stagas/vdomini/blob/fb10c9c78cd5759056d455666faed1e65672eff1/src/render.ts#L622-L624 "Source code on GitHub")
 
 Renders a virtual node on an html Element.
 
@@ -139,7 +139,7 @@ render(<p>hello world</p>, document.body)
 
 ### useHook
 
-[src/hooks.ts:17-20](https://github.com/stagas/vdomini/blob/78b6151e18da16dc27d833f13acdbc5e3d8e7191/src/hooks.ts#L17-L20 "Source code on GitHub")
+[src/hooks.ts:17-20](https://github.com/stagas/vdomini/blob/fb10c9c78cd5759056d455666faed1e65672eff1/src/hooks.ts#L17-L20 "Source code on GitHub")
 
 Returns a callback that will trigger
 a rerender on the current component.
@@ -156,7 +156,7 @@ Returns **any** The hook callback
 
 ### useCallback
 
-[src/hooks.ts:40-43](https://github.com/stagas/vdomini/blob/78b6151e18da16dc27d833f13acdbc5e3d8e7191/src/hooks.ts#L40-L43 "Source code on GitHub")
+[src/hooks.ts:40-47](https://github.com/stagas/vdomini/blob/fb10c9c78cd5759056d455666faed1e65672eff1/src/hooks.ts#L40-L47 "Source code on GitHub")
 
 Wraps a function along with a hook
 so when called will also trigger that hook.
@@ -174,13 +174,13 @@ const Foo = () => {
 
 #### Parameters
 
-*   `fn` **function (): void** Any function to wrap with the hook
+*   `fn` **function (...args: [Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)\<any>): void** Any function to wrap with the hook
 
 Returns **any** The callback function
 
 ### trigger
 
-[src/render.ts:600-604](https://github.com/stagas/vdomini/blob/78b6151e18da16dc27d833f13acdbc5e3d8e7191/src/render.ts#L600-L604 "Source code on GitHub")
+[src/render.ts:600-604](https://github.com/stagas/vdomini/blob/fb10c9c78cd5759056d455666faed1e65672eff1/src/render.ts#L600-L604 "Source code on GitHub")
 
 Triggers a rerender on a hook.
 
@@ -200,7 +200,7 @@ trigger(hook)
 
 ### VHook
 
-[src/render.ts:35-40](https://github.com/stagas/vdomini/blob/78b6151e18da16dc27d833f13acdbc5e3d8e7191/src/render.ts#L35-L40 "Source code on GitHub")
+[src/render.ts:35-40](https://github.com/stagas/vdomini/blob/fb10c9c78cd5759056d455666faed1e65672eff1/src/render.ts#L35-L40 "Source code on GitHub")
 
 A hook that enables reactive programming. It can
 be obtained using the export [current.hook](#hook)
@@ -208,7 +208,7 @@ from inside a functional component.
 
 ### current
 
-[src/render.ts:566-572](https://github.com/stagas/vdomini/blob/78b6151e18da16dc27d833f13acdbc5e3d8e7191/src/render.ts#L566-L572 "Source code on GitHub")
+[src/render.ts:566-572](https://github.com/stagas/vdomini/blob/fb10c9c78cd5759056d455666faed1e65672eff1/src/render.ts#L566-L572 "Source code on GitHub")
 
 The `current` singleton.
 
@@ -216,14 +216,14 @@ Type: Current
 
 #### hook
 
-[src/render.ts:571-571](https://github.com/stagas/vdomini/blob/78b6151e18da16dc27d833f13acdbc5e3d8e7191/src/render.ts#L571-L571 "Source code on GitHub")
+[src/render.ts:571-571](https://github.com/stagas/vdomini/blob/fb10c9c78cd5759056d455666faed1e65672eff1/src/render.ts#L571-L571 "Source code on GitHub")
 
 Holds a reference to a hook that can
 be triggered later using [trigger](#trigger).
 
 ### h
 
-[src/h.ts:79-87](https://github.com/stagas/vdomini/blob/78b6151e18da16dc27d833f13acdbc5e3d8e7191/src/h.ts#L79-L87 "Source code on GitHub")
+[src/h.ts:79-87](https://github.com/stagas/vdomini/blob/fb10c9c78cd5759056d455666faed1e65672eff1/src/h.ts#L79-L87 "Source code on GitHub")
 
 The virtual node JSX factory. Returns the tree of the node and its children.
 
@@ -241,13 +241,13 @@ Returns **[VNode](#vnode)**
 
 ### Fragment
 
-[src/h.ts:66-66](https://github.com/stagas/vdomini/blob/78b6151e18da16dc27d833f13acdbc5e3d8e7191/src/h.ts#L66-L66 "Source code on GitHub")
+[src/h.ts:66-66](https://github.com/stagas/vdomini/blob/fb10c9c78cd5759056d455666faed1e65672eff1/src/h.ts#L66-L66 "Source code on GitHub")
 
 Fragment symbol for JSX fragments <>\</>.
 
 ### FunctionalComponent
 
-[src/h.ts:59-61](https://github.com/stagas/vdomini/blob/78b6151e18da16dc27d833f13acdbc5e3d8e7191/src/h.ts#L59-L61 "Source code on GitHub")
+[src/h.ts:59-61](https://github.com/stagas/vdomini/blob/fb10c9c78cd5759056d455666faed1e65672eff1/src/h.ts#L59-L61 "Source code on GitHub")
 
 Functional component interface.
 
@@ -263,13 +263,13 @@ Returns **any** The computed VNode.
 
 ### VNode
 
-[src/h.ts:43-47](https://github.com/stagas/vdomini/blob/78b6151e18da16dc27d833f13acdbc5e3d8e7191/src/h.ts#L43-L47 "Source code on GitHub")
+[src/h.ts:43-47](https://github.com/stagas/vdomini/blob/fb10c9c78cd5759056d455666faed1e65672eff1/src/h.ts#L43-L47 "Source code on GitHub")
 
 A virtual dom node.
 
 ### VType
 
-[src/h.ts:24-28](https://github.com/stagas/vdomini/blob/78b6151e18da16dc27d833f13acdbc5e3d8e7191/src/h.ts#L21-L23 "Source code on GitHub")
+[src/h.ts:24-28](https://github.com/stagas/vdomini/blob/fb10c9c78cd5759056d455666faed1e65672eff1/src/h.ts#L21-L23 "Source code on GitHub")
 
 The VNode type.
 
@@ -277,7 +277,7 @@ Type: ([FunctionalComponent](#functionalcomponent) | CustomElementConstructor | 
 
 ### VProps
 
-[src/h.ts:33-33](https://github.com/stagas/vdomini/blob/78b6151e18da16dc27d833f13acdbc5e3d8e7191/src/h.ts#L30-L32 "Source code on GitHub")
+[src/h.ts:33-33](https://github.com/stagas/vdomini/blob/fb10c9c78cd5759056d455666faed1e65672eff1/src/h.ts#L30-L32 "Source code on GitHub")
 
 VNode propeties.
 
@@ -285,7 +285,7 @@ Type: (Record<[string](https://developer.mozilla.org/docs/Web/JavaScript/Referen
 
 ### VChild
 
-[src/h.ts:38-38](https://github.com/stagas/vdomini/blob/78b6151e18da16dc27d833f13acdbc5e3d8e7191/src/h.ts#L35-L37 "Source code on GitHub")
+[src/h.ts:38-38](https://github.com/stagas/vdomini/blob/fb10c9c78cd5759056d455666faed1e65672eff1/src/h.ts#L35-L37 "Source code on GitHub")
 
 A VNode child.
 
