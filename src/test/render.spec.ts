@@ -11,6 +11,14 @@ describe('render(v, el)', () => {
     expect(c.innerHTML).toEqual('<p></p>')
   })
 
+  it('p with id', () => {
+    render({ type: 'p', props: { id: 'foo' }, children: [] }, c)
+    expect(c.outerHTML).toEqual('<div><p id="foo"></p></div>')
+    expect(c.innerHTML).toEqual('<p id="foo"></p>')
+    const p = c.firstChild as HTMLElement
+    expect(p.id).toEqual('foo')
+  })
+
   it('p w/class', () => {
     render({ type: 'p', props: { class: 'foo' }, children: [] }, c)
     expect(c.innerHTML).toEqual('<p class="foo"></p>')
@@ -52,8 +60,13 @@ describe('render(v, el)', () => {
   })
 
   it('svg prop', () => {
-    render({ type: 'svg', props: { viewBox: '0 0 10 10' }, children: [] }, c)
-    expect(c.innerHTML).toEqual('<svg viewBox="0 0 10 10"></svg>')
+    render(
+      { type: 'svg', props: { id: 'foo', viewBox: '0 0 10 10' }, children: [] },
+      c
+    )
+    expect(c.innerHTML).toEqual('<svg id="foo" viewBox="0 0 10 10"></svg>')
+    const svg = c.firstChild as SVGElement
+    expect(svg.id).toEqual('foo')
   })
 
   it('svg child prop', () => {
