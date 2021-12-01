@@ -110,7 +110,6 @@ const hookCache = new WeakMap() as SafeWeakMap<
 
 const createProp = (
   el: Element,
-  _doc: typeof xhtml,
   type: string,
   name: string,
   value: unknown,
@@ -189,22 +188,16 @@ const createProp = (
 
 const createProps = (
   el: Element,
-  doc: typeof xhtml,
   type: string,
   props: Record<string, unknown>,
   attrs: Record<string, Attr> = {}
 ) => {
-  for (const name in props) createProp(el, doc, type, name, props[name], attrs)
+  for (const name in props) createProp(el, type, name, props[name], attrs)
   propCache.set(el, { props, attrs })
 }
 
-const updateProps = (
-  el: Element,
-  doc: typeof xhtml,
-  type: string,
-  next: VProps
-) => {
-  if (!propCache.has(el)) return next && createProps(el, doc, type, next)
+const updateProps = (el: Element, type: string, next: VProps) => {
+  if (!propCache.has(el)) return next && createProps(el, type, next)
 
   const c = propCache.get(el)
   const { attrs, props } = c
@@ -267,7 +260,7 @@ const updateProps = (
   // created props
   for (const name in next)
     if (!(name in attrs) && !(name in props))
-      createProp(el, doc, type, name, next[name], attrs)
+      createProp(el, type, name, next[name], attrs)
 
   c.props = next
 }
@@ -404,7 +397,7 @@ function replaceText(
 function createNode(this: VObjectNode) {
   const { doc, type, props, children } = this
   const child = doc.createElement.call(document, type)
-  props && createProps(child, doc, type, props)
+  props && createProps(child, type, props)
   if (children.keyed) attach(child, children as VObjectKeyedNode[])
   else
     for (let i = 0; i < children.length; i++)
@@ -422,7 +415,7 @@ function replaceNode(this: VObjectNode, parent: Element, child: Element) {
 
   // enable reactive updates final step
   setHookParentChild(this, parent, child)
-  updateProps(child, this.doc, this.type, this.props)
+  updateProps(child, this.type, this.props)
   reconcile(child, this.children)
 }
 
@@ -485,7 +478,7 @@ const reconcileList = (
       child = item.el
 
       // update
-      updateProps(child, vNode.doc, vNode.type, vNode.props)
+      updateProps(child, vNode.type, vNode.props)
       reconcile(child, vNode.children)
 
       // move
