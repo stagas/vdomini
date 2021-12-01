@@ -44,6 +44,7 @@
     "cov": "jest --coverage",
     "bench": "fpick benchmark --repeat -- benny-vipu --min 20 -fc",
     "example": "fpick example --repeat -- node -r @swc-node/register",
+    "playground": "vite --force --cors --https --clearScreen=false --open /playground/",
     "lint": "eslint src && prettier --check src",
     "build:watch": "onchange -i src --await-write-finish 400 -- npm run build",
     "docs:watch": "onchange -i src --await-write-finish 400 -- npm run docs",
@@ -85,7 +86,8 @@
     "rimraf": "^3.0.2",
     "terser": "^5.10.0",
     "ts-node": "^10.4.0",
-    "typescript": "^4.5.2"
+    "typescript": "^4.5.2",
+    "vite": "^2.6.14"
   },
   "dependencies": {
     "camelcase-to-kebab": "^1.0.0"
