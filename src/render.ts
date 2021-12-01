@@ -110,7 +110,7 @@ const hookCache = new WeakMap() as SafeWeakMap<
 
 const createProp = (
   el: Element,
-  doc: typeof xhtml,
+  _doc: typeof xhtml,
   type: string,
   name: string,
   value: unknown,
@@ -165,28 +165,21 @@ const createProp = (
   // commented (attr)
   const attr = name //toAttr[name] || name
 
-  let node
   switch (typeof value) {
     case 'string':
     case 'number':
-      el.setAttributeNode(
-        (node = attrs[name] = doc.createAttribute.call(document, attr))
-      )
-      node.value = value as string
+      el.setAttribute(attr, value as string)
+      attrs[attr] = el.getAttributeNode(attr)!
       return
     case 'function':
-      el.setAttributeNode(
-        (node = attrs[name] = doc.createAttribute.call(document, attr))
-      )
-      node.value = ''
-      ;(el as Any)[attr] = value
+      el.setAttribute(attr, '')
+      attrs[attr] = el.getAttributeNode(attr)!
+      ;(el as Any)[name] = value
       return
     case 'boolean':
       if (value) {
-        el.setAttributeNode(
-          (node = attrs[name] = doc.createAttribute.call(document, attr))
-        )
-        node.value = ''
+        el.setAttribute(attr, '')
+        attrs[attr] = el.getAttributeNode(attr)!
       }
       return
     default:
