@@ -389,6 +389,12 @@ function replaceText(
   parent: Element,
   child: Element | Text
 ) {
+  if (child.nodeName !== '#text') {
+    const newChild = this.create()
+    setHookParentChild(this, parent, newChild)
+    parent.replaceChild(newChild, child)
+    return
+  }
   setHookParentChild(this, parent, child)
   this.text !== child.nodeValue && (child.nodeValue = this.text)
   return

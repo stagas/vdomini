@@ -158,4 +158,46 @@ describe('jsx', () => {
       '<div class="no">3</div><div class="yes">4</div><div class="no">5</div>'
     )
   })
+
+  it('replaces an element node with a text node', () => {
+    render(
+      <>
+        {false}
+        <p>world</p>
+      </>,
+      c
+    )
+
+    render(
+      <>
+        <p>hello</p>
+        {false}
+        <p>world</p>
+      </>,
+      c
+    )
+
+    expect(c.innerHTML).toEqual('<p>hello</p><p>world</p>')
+  })
+
+  it('replaces text nodes properly', () => {
+    render(
+      <>
+        {'foo'}
+        {'bar'}
+      </>,
+      c
+    )
+
+    render(
+      <>
+        {'zoo'}
+        {'foo'}
+        {'bar'}
+      </>,
+      c
+    )
+
+    expect(c.innerHTML).toEqual('zoofoobar')
+  })
 })
