@@ -5,14 +5,12 @@ module.exports = {
   coverageDirectory: '../coverage',
   transform: {
     '\\.(js|jsx|ts|tsx)$': [
-      '@swc-node/jest',
+      '@stagas/sucrase-jest-plugin',
       {
-        experimentalDecorators: true,
-        emitDecoratorMetadata: true,
-        react: {
-          pragma: 'h',
-          pragmaFrag: 'Fragment',
-        },
+        jsxPragma: 'h',
+        jsxFragmentPragma: 'Fragment',
+        production: true,
+        disableESTransforms: true,
       },
     ],
   },

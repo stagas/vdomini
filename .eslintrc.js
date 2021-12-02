@@ -1,4 +1,5 @@
 module.exports = {
+  root: true,
   env: {
     browser: true,
     es2021: true,
@@ -28,6 +29,6 @@ module.exports = {
       'error',
       { args: 'all', argsIgnorePattern: '^_' },
     ],
-    'react/no-unknown-property': 'off'
+    'react/no-unknown-property': 'off',
   },
 }
