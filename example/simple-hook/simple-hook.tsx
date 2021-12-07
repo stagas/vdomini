@@ -1,7 +1,3 @@
-/* eslint-disable react/no-unknown-property */
-/** @jsx h */
-/** @jsxFrag Fragment */
-
 import { h, Fragment, render, useHook } from 'vdomini'
 
 let clicked = 0

@@ -1,31 +1,55 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-namespace */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import type * as jsx from 'html-jsx'
+
+declare module 'html-jsx' {
+  interface DOMAttributes<T> extends JSX.IntrinsicAttributes {}
+}
+
 declare global {
   namespace JSX {
+    /**
+     * The type returned by our `createElement` factory.
+     * @private
+     */
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    export type Element = VNode
+    type Element = VNode
 
-    // @ts-ignore
-    export interface IntrinsicAttributes {
-      key?: any
-    }
-
-    export interface IntrinsicElements {
+    interface IntrinsicElements extends jsx.IntrinsicElements {
+      /**
+       * This allows for any tag to be used.
+       * @private
+       */
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      [k: string]: any
+      [k: string]: unknown
     }
+
+    interface IntrinsicAttributes {
+      /**
+       * Pass an object that will be assigned the DOM element reference in its `current` property.
+       * @private
+       */
+      ref?: {
+        current?: HTMLElement | SVGElement
+      }
+      /**
+       * List index key - each item's `key` must be unique.
+       * @private
+       */
+      key?: string | number
+    }
+
+    interface HTMLAttributes<T> extends jsx.HTMLAttributes<T> {}
+    interface SVGAttributes<T> extends jsx.SVGAttributes<T> {}
+    interface DOMAttributes<T> extends jsx.DOMAttributes<T> {}
   }
 }
 
 /**
  * The VNode type.
  */
-export type VType =
-  | FunctionalComponent
-  | CustomElementConstructor
-  | string
-  | symbol
+export type VType = FunctionalComponent | CustomElementConstructor | string | symbol
 
 /**
  * VNode propeties.
@@ -76,11 +100,7 @@ export const Fragment = Symbol()
  * @param props A props object with arbitrary values.
  * @param children A {@link VNode}.
  */
-export const h = (
-  type: VNode['type'],
-  props?: VNode['props'],
-  ...children: VNode['children']
-): VNode => ({
+export const h = (type: VNode['type'], props?: VNode['props'], ...children: VNode['children']): VNode => ({
   type,
   props,
   children,

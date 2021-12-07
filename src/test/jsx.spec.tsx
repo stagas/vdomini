@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-curly-brace-presence */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { h, Fragment } from '../h'
 
@@ -96,7 +97,7 @@ describe('e2e', () => {
     const prop = 'foo'
     const v = (
       <div key={i}>
-        <span className={prop}>{i}</span>
+        <span class={prop}>{i}</span>
         and some text
         <img title="more" alt="to make it realistic" width="300" />
         <div>
@@ -126,16 +127,11 @@ describe('e2e', () => {
 
     const count = 10
     const v = (
-      <div key={i} randomattr={i}>
-        <span className={prop}>{i}</span>
+      <div key={i} tabindex={i}>
+        <span class={prop}>{i}</span>
         and some text
-        <input autoFocus={i % 5 === 0} type="text" />
-        <img
-          crossOrigin="anonymous"
-          title="more"
-          alt="to make it realistic"
-          width="300"
-        />
+        <input autofocus={i % 5 === 0} type="text" />
+        <img crossorigin="anonymous" title="more" alt="to make it realistic" width="300" />
         <div>
           more
           <>
@@ -155,7 +151,7 @@ describe('e2e', () => {
             .map((_, ii: number) => (
               <li
                 key={ii}
-                onClick={i % 5 === 0 ? onClick : null}
+                onclick={i % 5 === 0 ? onClick : undefined}
                 style={
                   i % 3 !== 0
                     ? {

@@ -60,10 +60,7 @@ export interface VObjectKeyedNode extends VObjectNode {
 
 export type VObjectAny = (VObjectNode | VObjectText) & VObjectInterface
 
-export type VObject = Partial<VObjectText> &
-  Partial<VObjectNode> &
-  Partial<VObjectKeyedNode> &
-  VObjectInterface
+export type VObject = Partial<VObjectText> & Partial<VObjectNode> & Partial<VObjectKeyedNode> & VObjectInterface
 
 export type VObjectInterface = {
   create<T>(this: T): Element | Text
@@ -97,10 +94,7 @@ type ListKeysCache = {
 }
 const listKeysCache = new WeakMap() as SafeWeakMap<Node, ListKeysCache>
 
-const hookCache = new WeakMap() as SafeWeakMap<
-  VNode | VObject | VObjectText | VObjectNode,
-  Partial<VHook>
->
+const hookCache = new WeakMap() as SafeWeakMap<VNode | VObject | VObjectText | VObjectNode, Partial<VHook>>
 
 //
 //
@@ -108,13 +102,7 @@ const hookCache = new WeakMap() as SafeWeakMap<
 //
 //
 
-const createProp = (
-  el: Element,
-  type: string,
-  name: string,
-  value: unknown,
-  attrs: Record<string, Attr>
-) => {
+const createProp = (el: Element, type: string, name: string, value: unknown, attrs: Record<string, Attr>) => {
   // all the Any's below are on purpose
   // all the cases should be taken care of,
   // but since this is user input they are allowed
@@ -186,12 +174,7 @@ const createProp = (
   }
 }
 
-const createProps = (
-  el: Element,
-  type: string,
-  props: Record<string, unknown>,
-  attrs: Record<string, Attr> = {}
-) => {
+const createProps = (el: Element, type: string, props: Record<string, unknown>, attrs: Record<string, Attr> = {}) => {
   for (const name in props) createProp(el, type, name, props[name], attrs)
   propCache.set(el, { props, attrs })
 }
@@ -253,14 +236,11 @@ const updateProps = (el: Element, type: string, next: VProps) => {
     }
 
     // updated value
-    if (props[name] !== (value = next[name]) && typeof value !== 'function')
-      attrs[name].value = value as string
+    if (props[name] !== (value = next[name]) && typeof value !== 'function') attrs[name].value = value as string
   }
 
   // created props
-  for (const name in next)
-    if (!(name in attrs) && !(name in props))
-      createProp(el, type, name, next[name], attrs)
+  for (const name in next) if (!(name in attrs) && !(name in props)) createProp(el, type, name, next[name], attrs)
 
   c.props = next
 }
@@ -271,10 +251,7 @@ const updateProps = (el: Element, type: string, next: VProps) => {
 //
 //
 
-const expand = (
-  v: VNode['children'] | VChild,
-  doc = xhtml
-): VObjectNode['children'] => {
+const expand = (v: VNode['children'] | VChild, doc = xhtml): VObjectNode['children'] => {
   switch (typeof v) {
     case 'string':
     case 'number': {
@@ -384,11 +361,7 @@ function createText(this: VObjectText) {
   return document.createTextNode(this.text)
 }
 
-function replaceText(
-  this: VObjectText,
-  parent: Element,
-  child: Element | Text
-) {
+function replaceText(this: VObjectText, parent: Element, child: Element | Text) {
   if (child.nodeName !== '#text') {
     const newChild = this.create()
     setHookParentChild(this, parent, newChild)
@@ -405,9 +378,7 @@ function createNode(this: VObjectNode) {
   const child = doc.createElement.call(document, type)
   props && createProps(child, type, props)
   if (children.keyed) attach(child, children as VObjectKeyedNode[])
-  else
-    for (let i = 0; i < children.length; i++)
-      append(child, children[i] as VObjectAny)
+  else for (let i = 0; i < children.length; i++) append(child, children[i] as VObjectAny)
   return child
 }
 
@@ -453,11 +424,7 @@ const attach = (el: Element, children: VObjectKeyedNode[]) => {
   })
 }
 
-const reconcileList = (
-  parent: Element,
-  cache: ListKeysCache,
-  next: VObjectKeyedNode[]
-) => {
+const reconcileList = (parent: Element, cache: ListKeysCache, next: VObjectKeyedNode[]) => {
   touched.clear()
 
   const { prev, keys } = cache
@@ -533,11 +500,9 @@ const reconcile = (parent: Element, next: VObjectNode['children']) => {
 
   if (next.length >= prevLength) {
     for (let i = 0; i < prevLength; i++) next[i].replace(parent, prev[i])
-    for (let i = prevLength; i < next.length; i++)
-      append(parent, next[i] as VObjectAny)
+    for (let i = prevLength; i < next.length; i++) append(parent, next[i] as VObjectAny)
   } else {
-    for (let i = next.length; i < prevLength; i++)
-      parent.removeChild(parent.lastChild!)
+    for (let i = next.length; i < prevLength; i++) parent.removeChild(parent.lastChild!)
     for (let i = 0; i < next.length; i++) next[i].replace(parent, prev[i])
   }
 }
@@ -563,11 +528,7 @@ export const current: Current = {
   hook: null,
 }
 
-const setHookParentChild = (
-  vNode: VObjectNode | VObjectText,
-  parent: Element,
-  child: Element | Text
-) => {
+const setHookParentChild = (vNode: VObjectNode | VObjectText, parent: Element, child: Element | Text) => {
   if (!hookCache.has(vNode)) return
   const hook = hookCache.get(vNode)
   hook.parent = parent

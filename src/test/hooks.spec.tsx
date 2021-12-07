@@ -1,13 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {
-  h,
-  Fragment,
-  render,
-  current,
-  trigger,
-  useHook,
-  useCallback,
-} from '../'
+import { h, Fragment, render, current, trigger, useHook, useCallback } from '../'
 
 let c: any
 beforeEach(() => (c = document.createElement('div')))
@@ -443,13 +435,9 @@ describe('hooks', () => {
       </div>,
       c
     )
-    expect(c.innerHTML).toEqual(
-      '<div><p><li>01</li><li>23</li><li>45</li></p></div>'
-    )
+    expect(c.innerHTML).toEqual('<div><p><li>01</li><li>23</li><li>45</li></p></div>')
     trigger(hook)
-    expect(c.innerHTML).toEqual(
-      '<div><p><li>01</li><li>23</li><li>67</li></p></div>'
-    )
+    expect(c.innerHTML).toEqual('<div><p><li>01</li><li>23</li><li>67</li></p></div>')
   })
 
   it('useHook', () => {

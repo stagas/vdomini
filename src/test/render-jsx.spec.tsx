@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-curly-brace-presence */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { h, Fragment, render } from '../'
 
@@ -74,17 +75,13 @@ describe('jsx', () => {
 
     const factory = () => (
       <div key={i}>
-        <span className={prop}>{i}</span>
+        <span class={prop}>{i}</span>
         and some text
-        <input autoFocus={i % 5 === 0} type="text" />
-        <img
-          crossOrigin="anonymous"
-          title="more"
-          alt="to make it realistic"
-          width="300"
-        />
+        <input autofocus={i % 5 === 0} type="text" />
+        <img crossorigin="anonymous" title="more" alt="to make it realistic" width="300" />
         <div>
           more
+          <a>hey</a>
           <>
             {Array(count * 2 - i * 2)
               .fill(0)
@@ -102,7 +99,7 @@ describe('jsx', () => {
             .map((_, ii: number) => (
               <li
                 key={ii}
-                onClick={i % 5 === 0 ? onClick : null}
+                onclick={i % 5 === 0 ? onClick : undefined}
                 style={
                   i % 3 !== 0
                     ? {
@@ -143,9 +140,7 @@ describe('jsx', () => {
       </>,
       c
     )
-    expect(c.innerHTML).toEqual(
-      '<div class="yes">0</div><div class="no">1</div><div class="yes">2</div>'
-    )
+    expect(c.innerHTML).toEqual('<div class="yes">0</div><div class="no">1</div><div class="yes">2</div>')
     render(
       <>
         {[4, 5, 6].map(x => (
@@ -154,9 +149,7 @@ describe('jsx', () => {
       </>,
       c
     )
-    expect(c.innerHTML).toEqual(
-      '<div class="no">3</div><div class="yes">4</div><div class="no">5</div>'
-    )
+    expect(c.innerHTML).toEqual('<div class="no">3</div><div class="yes">4</div><div class="no">5</div>')
   })
 
   it('replaces an element node with a text node', () => {

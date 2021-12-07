@@ -47,10 +47,7 @@ describe('render(v, el)', () => {
 
   it('custom elements not implemented', () => {
     expect(() => {
-      render(
-        { type: class extends HTMLElement {}, props: null, children: [] },
-        c
-      )
+      render({ type: class extends HTMLElement {}, props: null, children: [] }, c)
     }).toThrow('not implemented')
   })
 
@@ -60,10 +57,7 @@ describe('render(v, el)', () => {
   })
 
   it('svg prop', () => {
-    render(
-      { type: 'svg', props: { id: 'foo', viewBox: '0 0 10 10' }, children: [] },
-      c
-    )
+    render({ type: 'svg', props: { id: 'foo', viewBox: '0 0 10 10' }, children: [] }, c)
     expect(c.innerHTML).toEqual('<svg id="foo" viewBox="0 0 10 10"></svg>')
     const svg = c.firstChild as SVGElement
     expect(svg.id).toEqual('foo')
@@ -91,9 +85,7 @@ describe('render(v, el)', () => {
           {
             type: 'foreignObject',
             props: null,
-            children: [
-              { type: 'input', props: { autoFocus: true }, children: [] },
-            ],
+            children: [{ type: 'input', props: { autoFocus: true }, children: [] }],
           },
         ],
       },
@@ -513,9 +505,7 @@ describe('render(v, el)', () => {
       c
     )
     const prev = Array.from(c.querySelectorAll('li'))
-    expect(c.innerHTML).toEqual(
-      '<ul><li id="first"></li><li id="second"></li><li id="third"></li></ul>'
-    )
+    expect(c.innerHTML).toEqual('<ul><li id="first"></li><li id="second"></li><li id="third"></li></ul>')
     expect(prev[0].id).toEqual('first')
     render(
       {
@@ -541,9 +531,7 @@ describe('render(v, el)', () => {
     expect(prev[0] === next[2]).toBe(true)
     expect(prev[1]).toBe(next[0])
     expect(prev[2]).toBe(next[1])
-    expect(c.innerHTML).toEqual(
-      '<ul><li id="second"></li><li id="third"></li><li id="first"></li></ul>'
-    )
+    expect(c.innerHTML).toEqual('<ul><li id="second"></li><li id="third"></li><li id="first"></li></ul>')
   })
 
   it('ul w/children w/ siblings then remove', () => {
@@ -570,9 +558,7 @@ describe('render(v, el)', () => {
       c
     )
     const prev = Array.from(c.querySelectorAll('li'))
-    expect(c.innerHTML).toEqual(
-      '<ul>hello<li id="first"></li><li id="second"></li><li id="third"></li></ul>'
-    )
+    expect(c.innerHTML).toEqual('<ul>hello<li id="first"></li><li id="second"></li><li id="third"></li></ul>')
     expect(prev[0].id).toEqual('first')
     render(
       {
@@ -600,9 +586,7 @@ describe('render(v, el)', () => {
     )
     const prev = Array.from(c.querySelectorAll('li'))
     expect(prev[0].id).toEqual('first')
-    expect(c.innerHTML).toEqual(
-      '<ul><li id="first"></li><li id="second"></li><li id="third"></li></ul>'
-    )
+    expect(c.innerHTML).toEqual('<ul><li id="first"></li><li id="second"></li><li id="third"></li></ul>')
     render(
       {
         type: 'ul',
@@ -627,9 +611,7 @@ describe('render(v, el)', () => {
     expect(prev[0] === next[2]).toBe(true)
     expect(prev[1]).toBe(next[0])
     expect(prev[2]).toBe(next[1])
-    expect(c.innerHTML).toEqual(
-      '<ul><li id="second"></li><li id="third"></li><li id="first"></li></ul>'
-    )
+    expect(c.innerHTML).toEqual('<ul><li id="second"></li><li id="third"></li><li id="first"></li></ul>')
   })
   it('ul w/children keyed swap', () => {
     render(
@@ -754,9 +736,7 @@ describe('render(v, el)', () => {
     const prev = Array.from(c.querySelectorAll('li'))
     expect(prev[0].id).toEqual('first')
     expect(prev[1].id).toEqual('third')
-    expect(c.innerHTML).toEqual(
-      '<ul><li id="first"></li><li id="third"></li></ul>'
-    )
+    expect(c.innerHTML).toEqual('<ul><li id="first"></li><li id="third"></li></ul>')
     render(
       {
         type: 'ul',
@@ -783,9 +763,7 @@ describe('render(v, el)', () => {
     expect(prev[0]).toBe(next[0])
     expect(prev[1]).toBe(next[2])
 
-    expect(c.innerHTML).toEqual(
-      '<ul><li id="first"></li><li id="second"></li><li id="third"></li></ul>'
-    )
+    expect(c.innerHTML).toEqual('<ul><li id="first"></li><li id="second"></li><li id="third"></li></ul>')
   })
 
   it('ul w/children keyed append', () => {
@@ -802,9 +780,7 @@ describe('render(v, el)', () => {
     )
     const prev = Array.from(c.querySelectorAll('li'))
     expect(prev[0].id).toEqual('first')
-    expect(c.innerHTML).toEqual(
-      '<ul><li id="first"></li><li id="second"></li></ul>'
-    )
+    expect(c.innerHTML).toEqual('<ul><li id="first"></li><li id="second"></li></ul>')
     render(
       {
         type: 'ul',
@@ -840,9 +816,7 @@ describe('render(v, el)', () => {
     )
     const prev = Array.from(c.querySelectorAll('li'))
     expect(prev[0].id).toEqual('second')
-    expect(c.innerHTML).toEqual(
-      '<ul><li id="second"></li><li id="third"></li></ul>'
-    )
+    expect(c.innerHTML).toEqual('<ul><li id="second"></li><li id="third"></li></ul>')
     render(
       {
         type: 'ul',
@@ -856,9 +830,7 @@ describe('render(v, el)', () => {
       c
     )
     const next = Array.from(c.querySelectorAll('li'))
-    expect(c.innerHTML).toEqual(
-      '<ul><li id="first"></li><li id="second"></li><li id="third"></li></ul>'
-    )
+    expect(c.innerHTML).toEqual('<ul><li id="first"></li><li id="second"></li><li id="third"></li></ul>')
     expect(prev[0] === next[1]).toBe(true)
     expect(prev[1] === next[2]).toBe(true)
 
@@ -883,9 +855,7 @@ describe('render(v, el)', () => {
 
     const prev = Array.from(c.querySelectorAll('li'))
     expect(prev[0].id).toEqual('first')
-    expect(c.innerHTML).toEqual(
-      '<ul><li id="first"></li><li id="second"></li><li id="third"></li></ul>'
-    )
+    expect(c.innerHTML).toEqual('<ul><li id="first"></li><li id="second"></li><li id="third"></li></ul>')
     render(
       {
         type: 'ul',
@@ -921,9 +891,7 @@ describe('render(v, el)', () => {
 
     const prev = Array.from(c.querySelectorAll('li'))
     expect(prev[0].id).toEqual('first')
-    expect(c.innerHTML).toEqual(
-      '<ul><li id="first"></li><li id="second"></li><li id="third"></li></ul>'
-    )
+    expect(c.innerHTML).toEqual('<ul><li id="first"></li><li id="second"></li><li id="third"></li></ul>')
     render(
       {
         type: 'ul',
@@ -1012,9 +980,7 @@ describe('render(v, el)', () => {
       {
         type: 'p',
         props: null,
-        children: [
-          { type: Fragment, props: null, children: ['hello', ' world'] },
-        ],
+        children: [{ type: Fragment, props: null, children: ['hello', ' world'] }],
       },
       c
     )
@@ -1180,11 +1146,7 @@ describe('render(v, el)', () => {
     const Foo: any = ({ message }: { message: string }) => ({
       type: Fragment,
       props: null,
-      children: [
-        'hello',
-        ' world',
-        { type: Bar, props: { message }, children: [] },
-      ],
+      children: ['hello', ' world', { type: Bar, props: { message }, children: [] }],
     })
     render(
       {
@@ -1222,51 +1184,33 @@ describe('render(v, el)', () => {
   })
 
   it('p style string (cssText)', () => {
-    render(
-      { type: 'p', props: { style: 'overflow-wrap:normal' }, children: [] },
-      c
-    )
+    render({ type: 'p', props: { style: 'overflow-wrap:normal' }, children: [] }, c)
     expect(c.innerHTML).toEqual('<p style="overflow-wrap:normal"></p>')
   })
 
   it('p style string (cssText) update', () => {
-    render(
-      { type: 'p', props: { style: 'overflow-wrap:normal' }, children: [] },
-      c
-    )
+    render({ type: 'p', props: { style: 'overflow-wrap:normal' }, children: [] }, c)
     expect(c.innerHTML).toEqual('<p style="overflow-wrap:normal"></p>')
-    render(
-      { type: 'p', props: { style: 'overflow-wrap:break-word' }, children: [] },
-      c
-    )
+    render({ type: 'p', props: { style: 'overflow-wrap:break-word' }, children: [] }, c)
     expect(c.innerHTML).toEqual('<p style="overflow-wrap:break-word"></p>')
   })
 
   it('p style string (cssText) remove empty', () => {
-    render(
-      { type: 'p', props: { style: 'overflow-wrap:normal' }, children: [] },
-      c
-    )
+    render({ type: 'p', props: { style: 'overflow-wrap:normal' }, children: [] }, c)
     expect(c.innerHTML).toEqual('<p style="overflow-wrap:normal"></p>')
     render({ type: 'p', props: { style: '' }, children: [] }, c)
     expect(c.innerHTML).toEqual('<p style=""></p>')
   })
 
   it('p style string (cssText) remove missing from props', () => {
-    render(
-      { type: 'p', props: { style: 'overflow-wrap:normal' }, children: [] },
-      c
-    )
+    render({ type: 'p', props: { style: 'overflow-wrap:normal' }, children: [] }, c)
     expect(c.innerHTML).toEqual('<p style="overflow-wrap:normal"></p>')
     render({ type: 'p', props: null, children: [] }, c)
     expect(c.innerHTML).toEqual('<p></p>')
   })
 
   it('p style object', () => {
-    render(
-      { type: 'p', props: { style: { overflowWrap: 'normal' } }, children: [] },
-      c
-    )
+    render({ type: 'p', props: { style: { overflowWrap: 'normal' } }, children: [] }, c)
     expect(c.innerHTML).toEqual('<p style="overflow-wrap:normal;"></p>')
   })
 
@@ -1283,10 +1227,7 @@ describe('render(v, el)', () => {
   })
 
   it('p style object add', () => {
-    render(
-      { type: 'p', props: { style: { overflowWrap: 'normal' } }, children: [] },
-      c
-    )
+    render({ type: 'p', props: { style: { overflowWrap: 'normal' } }, children: [] }, c)
     expect(c.innerHTML).toEqual('<p style="overflow-wrap:normal;"></p>')
     render(
       {
@@ -1296,9 +1237,7 @@ describe('render(v, el)', () => {
       },
       c
     )
-    expect(c.innerHTML).toEqual(
-      '<p style="overflow-wrap:normal;color:blue;"></p>'
-    )
+    expect(c.innerHTML).toEqual('<p style="overflow-wrap:normal;color:blue;"></p>')
   })
 
   it('p style object remove', () => {
@@ -1310,13 +1249,8 @@ describe('render(v, el)', () => {
       },
       c
     )
-    expect(c.innerHTML).toEqual(
-      '<p style="overflow-wrap:normal;color:blue;"></p>'
-    )
-    render(
-      { type: 'p', props: { style: { overflowWrap: 'normal' } }, children: [] },
-      c
-    )
+    expect(c.innerHTML).toEqual('<p style="overflow-wrap:normal;color:blue;"></p>')
+    render({ type: 'p', props: { style: { overflowWrap: 'normal' } }, children: [] }, c)
     expect(c.innerHTML).toEqual('<p style="overflow-wrap:normal;"></p>')
   })
 
@@ -1362,9 +1296,7 @@ describe('e2e', () => {
       c
     )
     expect(c.innerHTML).toEqual(
-      '<p align="center">hello<br>world<input type="text">' +
-        '<button><span>click me</span></button>' +
-        '</p>'
+      '<p align="center">hello<br>world<input type="text">' + '<button><span>click me</span></button>' + '</p>'
     )
     const input = c.querySelector('input')
     const button = c.querySelector('button')
