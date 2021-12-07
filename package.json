@@ -91,6 +91,6 @@
   },
   "dependencies": {
     "camelcase-to-kebab": "^1.0.0",
-    "html-jsx": "^0.1.2"
+    "html-jsx": "^0"
   }
 }
