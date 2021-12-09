@@ -105,6 +105,14 @@ describe('render(v, el)', () => {
     expect(ref.current).toBe(p)
   })
 
+  it('p w/ref = null', () => {
+    const ref: any = null
+    render({ type: 'p', props: { ref }, children: [] }, c)
+    expect(c.innerHTML).toEqual('<p></p>')
+    const p = c.firstChild as any
+    expect(p.ref).toEqual(undefined)
+  })
+
   it('p w/ref update', () => {
     const ref: any = {}
     render({ type: 'p', props: { ref }, children: [] }, c)

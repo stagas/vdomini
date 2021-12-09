@@ -114,7 +114,7 @@ const createProp = (el: Element, type: string, name: string, value: unknown, att
     case 'key':
       return
     case 'ref':
-      ;(value as Any).current = el
+      if (value) (value as Any).current = el
       return
 
     // "value" and "checked" properties have to be set
