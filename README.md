@@ -285,11 +285,28 @@ Type: (Record<[string](https://developer.mozilla.org/docs/Web/JavaScript/Referen
 
 ### VChild
 
-[src/h.ts:62-62](https://github.com/stagas/vdomini/blob/1dc7d100bc276f2e142d236b3106e7f83a5b5f1e/src/h.ts#L59-L61 "Source code on GitHub")
+[src/h.ts:62-62](https://github.com/stagas/vdomini/blob/38852eabd2a9e12ebd7a707c67f17d3b1daa05ec/src/h.ts#L59-L61 "Source code on GitHub")
 
 A VNode child.
 
 Type: ([VNode](#vnode) | [string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String) | [number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number) | [boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean) | [undefined](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/undefined))
+
+## Recipes
+
+Getting a reference to an element when it is created inside the component:
+
+```tsx
+const Component = () => {
+  const ref = {
+    set current(el) {
+      // el is now the div below
+      // here we can attach event listeners,
+      // mutation observers etc.
+    },
+  }
+  return <div ref={ref}></div>
+}
+```
 
 ## Contribute
 
