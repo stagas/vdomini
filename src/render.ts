@@ -48,6 +48,7 @@ export interface VObjectText {
 export interface VObjectNode {
   create(): Element
   replace(parent: Element, child: Element): void
+  options: { is?: string }
   doc: typeof xhtml
   type: string
   props: VNode['props']
@@ -331,9 +332,13 @@ const expand = (v: VNode['children'] | VChild, doc = xhtml): VObjectNode['childr
         }
       }
 
+      const options: { is?: string } = {}
+      if (v.props?.is) options.is = v.props.is as string
+
       const vObject: VObjectNode = {
         create: createNode,
         replace: replaceNode,
+        options,
         doc,
         type: type as string, // it's never symbol here we short circuit at Fragment ^
         props: v.props,
@@ -374,8 +379,8 @@ function replaceText(this: VObjectText, parent: Element, child: Element | Text) 
 }
 
 function createNode(this: VObjectNode) {
-  const { doc, type, props, children } = this
-  const child = doc.createElement.call(document, type)
+  const { doc, type, props, options, children } = this
+  const child = doc.createElement.call(document, type, options)
   props && createProps(child, type, props)
   if (children.keyed) attach(child, children as VObjectKeyedNode[])
   else for (let i = 0; i < children.length; i++) append(child, children[i] as VObjectAny)

@@ -45,6 +45,15 @@ describe('render(v, el)', () => {
     expect(c.innerHTML).toEqual('<p class="bar"></p>')
   })
 
+  it('is=custom-element', () => {
+    const Custom = class extends HTMLTextAreaElement {}
+    const id = 'custom-' + ((Math.random() * 10e6) | 0).toString(36)
+    customElements.define(id, Custom, { extends: 'textarea' })
+    render({ type: 'textarea', props: { is: id }, children: [] }, c)
+    expect(c.innerHTML).toEqual(`<textarea is="${id}"></textarea>`)
+    expect(c.firstChild).toBeInstanceOf(Custom)
+  })
+
   it('custom elements not implemented', () => {
     expect(() => {
       render({ type: class extends HTMLElement {}, props: null, children: [] }, c)
