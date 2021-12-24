@@ -3,13 +3,14 @@ module.exports = {
   env: {
     browser: true,
     es2021: true,
+    node: true,
   },
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 2021,
     sourceType: 'module',
   },
-  extends: ['plugin:@typescript-eslint/recommended', 'html-jsx'],
+  extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended', 'html-jsx'],
   ignorePatterns: ['dist', 'node_modules'],
   plugins: ['import'],
   rules: {

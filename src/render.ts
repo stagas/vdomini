@@ -128,6 +128,7 @@ const createProp = (el: Element, type: string, name: string, value: unknown, att
           ;(el as Any)[name] = value
           return
       }
+      break
 
     case 'style':
       // if we createAttribute and set .value then that
@@ -323,9 +324,13 @@ const expand = (v: VNode['children'] | VChild, doc = xhtml): VObjectNode['childr
       if (hookCache.has(v)) hookCache.set(children[0], hookCache.get(v))
       return children
     }
-    case 'svg': // svg namespace entry
+
+    // svg namespace entry
+    case 'svg':
       doc = svg
-    default:
+
+    // eslint-disable-next-line no-fallthrough
+    default: {
       if (v.props?.style) {
         if (typeof v.props.style === 'object') {
           v.props.style = toCssText(v.props.style as CSSStyleDeclaration)
@@ -353,6 +358,7 @@ const expand = (v: VNode['children'] | VChild, doc = xhtml): VObjectNode['childr
       if (hookCache.has(v)) hookCache.set(vObject, hookCache.get(v))
 
       return [vObject as VObject & VObjectNode]
+    }
   }
 }
 
