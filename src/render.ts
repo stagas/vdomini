@@ -96,7 +96,7 @@ const hookCache = new WeakMap() as SafeWeakMap<VNode | VObject | VObjectText | V
 //
 //
 
-const createProp = (el: Element, type: string, name: string, value: unknown, attrs: Record<string, Attr>) => {
+const createProp = (el: Element, _type: string, name: string, value: unknown, attrs: Record<string, Attr>) => {
   // all the Any's below are on purpose
   // all the cases should be taken care of,
   // but since this is user input they are allowed
@@ -116,12 +116,8 @@ const createProp = (el: Element, type: string, name: string, value: unknown, att
     // properly diff later (see updateProps)
     case 'value':
     case 'checked':
-      switch (type) {
-        case 'input':
-          ;(el as Any)[name] = value
-          return
-      }
-      break
+      ;(el as Any)[name] = value
+      return
 
     case 'style':
       // if we createAttribute and set .value then that
@@ -207,12 +203,11 @@ const updateProps = (el: Element, type: string, next: VProps) => {
       // editing an input so we can't diff and have to check it directly
       case 'value':
       case 'checked':
-        // special cases
-        switch (type) {
-          case 'input':
-            ;(el as Any)[name] !== value && ((el as Any)[name] = value)
-            continue out
-        }
+        // don't try to update value when element has focus
+        // because user is editing and it messes up everything
+        // TODO: any way around this?
+        ;(el as Any)[name] !== value && document.activeElement !== el && ((el as Any)[name] = value)
+        continue out
     }
 
     // updated prop
