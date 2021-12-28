@@ -165,7 +165,9 @@ const createProp = (el: Element, type: string, name: string, value: unknown, att
       }
       return
     default:
-      ;(el as Any)[name] = value
+      if (value != null) {
+        ;(el as Any)[name] = value
+      }
   }
 }
 
@@ -224,7 +226,7 @@ const updateProps = (el: Element, type: string, next: VProps) => {
 
   for (const name in attrs) {
     // removed attribute
-    if (!(name in next) || next[name] === false) {
+    if (!(name in next) || next[name] === false || next[name] == null) {
       el.removeAttributeNode(attrs[name])
       delete attrs[name]
       continue
