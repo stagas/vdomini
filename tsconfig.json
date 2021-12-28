@@ -8,6 +8,10 @@
   "ts-node": {
     "files": true
   },
+  "watchOptions": {
+    "watchFile": "priorityPollingInterval",
+    "watchDirectory": "dynamicPriorityPolling"
+  },
   "compilerOptions": {
     "lib": [
       "dom",

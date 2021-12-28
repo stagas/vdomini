@@ -25,14 +25,6 @@
       "require": "./dist/cjs/index.js"
     }
   },
-  "targets": {
-    "main": {
-      "context": "node",
-      "engines": {
-        "node": ">=16.0"
-      }
-    }
-  },
   "files": [
     "dist"
   ],
@@ -46,14 +38,16 @@
     "example": "fpick example --repeat -- node -r esbuild-register",
     "playground": "vite --force --cors --https --clearScreen=false --open /playground/",
     "lint": "eslint src && prettier --check src",
-    "build:watch": "onchange -i src --await-write-finish 400 -- npm run build",
+    "build:watch": "npm run build:cjs:watch & npm run build:esm:watch",
     "docs:watch": "onchange -i src --await-write-finish 400 -- npm run docs",
     "test:watch": "jest --watchAll",
     "cov:watch": "jest --coverage --watchAll",
     "bench:watch": "fpick benchmark -- onchange -i src --await-write-finish 400 --kill -- benny-vipu --min 20 -fc",
     "example:watch": "fpick example -- onchange -i src example --await-write-finish 400 --kill -- node -r esbuild-register",
     "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:cjs:watch": "tsc -p tsconfig.cjs.json --watch",
     "build:esm": "tsc -p tsconfig.esm.json && echo '{\"type\":\"module\"}' >dist/esm/package.json",
+    "build:esm:watch": "tsc -p tsconfig.esm.json --watch",
     "build:min": "esbuild src/index.ts --bundle --format=esm | terser --compress --module --mangle -o vdomini.min.js",
     "lint:fix": "eslint --fix src && prettier --write src",
     "clean": "rimraf dist",
@@ -62,16 +56,17 @@
     "prepare": "husky install"
   },
   "devDependencies": {
+    "@stagas/documentation-fork": "^13.2.5",
     "@stagas/sucrase-jest-plugin": "^2.2.0-fork",
     "@tsconfig/node16": "^1.0.2",
     "@types/jest": "^27.0.3",
     "@types/node": "^16.11.12",
     "@typescript-eslint/eslint-plugin": "^5.6.0",
     "@typescript-eslint/parser": "^5.6.0",
+    "@typescript/lib-dom": "npm:@types/web@^0.0.48",
     "@web/dev-server-esbuild": "^0.2.16",
     "@web/test-runner": "^0.13.22",
     "benny-vipu": "^1.1.0",
-    "documentation": "github:documentationjs/documentation",
     "esbuild": "^0.14.2",
     "esbuild-register": "^3.2.0",
     "eslint": "^8.4.1",
