@@ -70,14 +70,6 @@ export type VObjectInterface = {
 
 //
 //
-// singletons
-//
-//
-
-const touched = new Set<object>()
-
-//
-//
 // caches
 //
 //
@@ -92,6 +84,7 @@ type ListKey = { i: number; el: Element }
 type ListKeysCache = {
   prev: VObjectKeyedNode[]
   keys: SafeMap<object, ListKey>
+  touched: Set<object>
 }
 const listKeysCache = new WeakMap() as SafeWeakMap<Node, ListKeysCache>
 
@@ -430,15 +423,16 @@ const attach = (el: Element, children: VObjectKeyedNode[]) => {
     } as ListKey)
   }
   listKeysCache.set(el, {
+    touched: new Set(),
     prev: children,
     keys,
   })
 }
 
 const reconcileList = (parent: Element, cache: ListKeysCache, next: VObjectKeyedNode[]) => {
-  touched.clear()
+  const { prev, keys, touched } = cache
 
-  const { prev, keys } = cache
+  touched.clear()
 
   for (let i = 0, left: Element; i < next.length; i++) {
     const vNode = next[i]
