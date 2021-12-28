@@ -31,7 +31,7 @@ declare global {
        * @private
        */
       ref?: {
-        current?: HTMLElement | SVGElement
+        current?: HTMLElement | SVGElement | null
       }
       /**
        * List index key - each item's `key` must be unique.
