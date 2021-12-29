@@ -1,25 +1,7 @@
 import type { VNode, VProps, VChild, FunctionalComponent } from './h'
 import { toCssText, xhtml, svg } from './util'
 import { Fragment } from './h'
-
-//
-//
-// utility types
-//
-//
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Any = any
-
-interface SafeMap<K extends object, T> extends Map<K, T> {
-  has(v: K): boolean
-  get(v: K): T
-}
-
-interface SafeWeakMap<K extends object, T> extends WeakMap<K, T> {
-  has(v: K): boolean
-  get(v: K): T
-}
+import { Any, SafeMap, SafeWeakMap } from './types'
 
 //
 //
@@ -30,29 +12,32 @@ interface SafeWeakMap<K extends object, T> extends WeakMap<K, T> {
 /**
  * A hook that enables reactive programming. It can
  * be obtained using the export [current.hook](#hook)
- * from inside a functional component.
+ * from inside a functional component and triggered
+ * using `trigger(hook)`.
  */
 export interface VHook {
-  parent: Element
-  child: Element | Text
-  vNode: VNode
+  v: VNode
   doc: VObjectNode['doc']
+  parent?: Element
+  children: (Element | Text)[]
 }
 
 export interface VObjectText {
-  create(): Text
+  create(parent: Element): Text
   replace(parent: Element, child: Element): void
   text: string
+  hook?: VHook
 }
 
 export interface VObjectNode {
-  create(): Element
+  create(parent: Element): Element
   replace(parent: Element, child: Element): void
   options: { is?: string }
   doc: typeof xhtml
   type: string
   props: VNode['props']
   children: VObject[] & { keyed?: boolean }
+  hook?: VHook
 }
 
 export interface VObjectKeyedNode extends VObjectNode {
@@ -64,7 +49,7 @@ export type VObjectAny = (VObjectNode | VObjectText) & VObjectInterface
 export type VObject = Partial<VObjectText> & Partial<VObjectNode> & Partial<VObjectKeyedNode> & VObjectInterface
 
 export type VObjectInterface = {
-  create<T>(this: T): Element | Text
+  create<T>(this: T, parent: Element): Element | Text
   replace<T>(this: T, parent: Element, child: Element | Text): void
 }
 
@@ -88,7 +73,10 @@ type ListKeysCache = {
 }
 const listKeysCache = new WeakMap() as SafeWeakMap<Node, ListKeysCache>
 
-const hookCache = new WeakMap() as SafeWeakMap<VNode | VObject | VObjectText | VObjectNode, Partial<VHook>>
+export const hooks = new WeakMap() as SafeWeakMap<
+  VNode | VObject | VObjectText | VObjectNode | VObjectNode['children'],
+  VHook
+>
 
 //
 //
@@ -243,7 +231,7 @@ const updateProps = (el: Element, type: string, next: VProps) => {
 //
 //
 
-const expand = (v: VNode['children'] | VChild, doc = xhtml): VObjectNode['children'] => {
+const expand = (v: VNode['children'] | VChild, doc = xhtml, parentHook?: VHook): VObjectNode['children'] => {
   switch (typeof v) {
     case 'string':
     case 'number': {
@@ -252,6 +240,7 @@ const expand = (v: VNode['children'] | VChild, doc = xhtml): VObjectNode['childr
           create: createText,
           replace: replaceText,
           text: '' + v,
+          hook: parentHook,
         } as VObject & VObjectText,
       ]
     }
@@ -262,6 +251,7 @@ const expand = (v: VNode['children'] | VChild, doc = xhtml): VObjectNode['childr
           create: createText,
           replace: replaceText,
           text: '',
+          hook: parentHook,
         } as VObject & VObjectText,
       ]
     }
@@ -269,7 +259,7 @@ const expand = (v: VNode['children'] | VChild, doc = xhtml): VObjectNode['childr
 
   if (Array.isArray(v)) {
     const result: VObjectNode['children'] = []
-    for (let i = 0; i < v.length; i++) result.push(...expand(v[i], doc))
+    for (let i = 0; i < v.length; i++) result.push(...expand(v[i], doc, parentHook))
     result.keyed = result[0]?.props?.key != null
     return result
   }
@@ -284,15 +274,12 @@ const expand = (v: VNode['children'] | VChild, doc = xhtml): VObjectNode['childr
     // enables reactive updates as the function component that runs below
     // can access through the export `current.hook`.
     // TODO: only gather when requested with a getHook() ?
-    const hook: Partial<VHook> = (current.hook = { vNode: v, doc })
+    const hook: VHook = (current.hook = parentHook ?? { v, doc, children: [] })
 
     const vNode = (type as FunctionalComponent)({
       ...v.props,
       children: v.children,
     })
-
-    // keep a pointer to the vNode data for later reactive partial updates
-    hookCache.set(vNode, hook)
 
     // this is a weird situation.
     // we special case "key" because when "expanding" the
@@ -305,13 +292,13 @@ const expand = (v: VNode['children'] | VChild, doc = xhtml): VObjectNode['childr
     // so this is what is happening here.
     if (v.props?.key != null) vNode.props = { key: v.props.key, ...vNode.props }
 
-    return expand(vNode, doc)
+    return expand(vNode, doc, hook)
   }
 
   switch (type) {
     case Fragment: {
-      const children = expand(v.children, doc)
-      if (hookCache.has(v)) hookCache.set(children[0], hookCache.get(v))
+      if (!v.children.length) v.children.push('') // must have a child for hooks to work (TODO: use comment node?)
+      const children = expand(v.children, doc, parentHook)
       return children
     }
 
@@ -342,10 +329,8 @@ const expand = (v: VNode['children'] | VChild, doc = xhtml): VObjectNode['childr
           // svg namespace exodus
           (type === 'foreignObject' && xhtml) || doc
         ),
+        hook: parentHook,
       }
-
-      // inherit hook from initial vNode
-      if (hookCache.has(v)) hookCache.set(vObject, hookCache.get(v))
 
       return [vObject as VObject & VObjectNode]
     }
@@ -358,48 +343,51 @@ const expand = (v: VNode['children'] | VChild, doc = xhtml): VObjectNode['childr
 //
 //
 
-function createText(this: VObjectText) {
-  return document.createTextNode(this.text)
+const fulfillHook = <T extends Element | Text>(vNode: VObjectText | VObjectNode, parent: Element, child: T): T => {
+  if (vNode.hook) {
+    vNode.hook.parent = parent
+    vNode.hook.children.push(child)
+  }
+  return child
+}
+function createText(this: VObjectText, parent: Element) {
+  return fulfillHook(this, parent, document.createTextNode(this.text))
 }
 
 function replaceText(this: VObjectText, parent: Element, child: Element | Text) {
   if (child.nodeName !== '#text') {
-    const newChild = this.create()
-    setHookParentChild(this, parent, newChild)
+    const newChild = this.create(parent)
     parent.replaceChild(newChild, child)
     return
   }
-  setHookParentChild(this, parent, child)
   this.text !== child.nodeValue && (child.nodeValue = this.text)
   return
 }
 
-function createNode(this: VObjectNode) {
+function createNode(this: VObjectNode, parent: Element) {
   const { doc, type, props, options, children } = this
   const child = doc.createElement.call(document, type, options)
   props && createProps(child, type, props)
   if (children.keyed) attach(child, children as VObjectKeyedNode[])
   else for (let i = 0; i < children.length; i++) append(child, children[i] as VObjectAny)
-  return child
+  return fulfillHook(this, parent, child)
 }
+
+// append or replace is where the hook needs to be set
 
 function replaceNode(this: VObjectNode, parent: Element, child: Element) {
   if (child.nodeName.toUpperCase() !== this.type.toUpperCase()) {
-    const newChild = this.create()
-    setHookParentChild(this, parent, newChild)
+    const newChild = this.create(parent)
     parent.replaceChild(newChild, child)
     return
   }
 
-  // enable reactive updates final step
-  setHookParentChild(this, parent, child)
   updateProps(child, this.type, this.props)
   reconcile(child, this.children)
 }
 
 const append = (parent: Element, vNode: VObjectAny) => {
-  const child = vNode.create()
-  setHookParentChild(vNode, parent, child)
+  const child = vNode.create(parent)
   parent.append(child)
   return child
 }
@@ -441,7 +429,7 @@ const reconcileList = (parent: Element, cache: ListKeysCache, next: VObjectKeyed
 
     if (!keys.has(key)) {
       // create
-      child = vNode.create()
+      child = vNode.create(parent)
 
       keys.set(key, { i, el: child })
       // we know left has been assigned because we're i>0
@@ -465,8 +453,6 @@ const reconcileList = (parent: Element, cache: ListKeysCache, next: VObjectKeyed
       if (i) left!.after(child)
       else parent.prepend(child)
     }
-
-    setHookParentChild(vNode, parent, child)
 
     left = child
   }
@@ -516,7 +502,7 @@ const reconcile = (parent: Element, next: VObjectNode['children']) => {
 //
 
 interface Current {
-  hook: Partial<VHook> | null
+  hook: VHook | null
 }
 
 /**
@@ -528,13 +514,6 @@ export const current: Current = {
    * be triggered later using {@link trigger}.
    */
   hook: null,
-}
-
-const setHookParentChild = (vNode: VObjectNode | VObjectText, parent: Element, child: Element | Text) => {
-  if (!hookCache.has(vNode)) return
-  const hook = hookCache.get(vNode)
-  hook.parent = parent
-  hook.child = child
 }
 
 /**
@@ -553,9 +532,21 @@ const setHookParentChild = (vNode: VObjectNode | VObjectText, parent: Element, c
  * @param hook The hook to trigger
  */
 export const trigger = (hook: VHook) => {
-  const vNode = expand(hook.vNode, hook.doc)
-  if (vNode.length > 1) reconcile(hook.parent, vNode)
-  else vNode[0].replace(hook.parent, hook.child)
+  if (!hook.parent) {
+    return
+  }
+
+  const v = expand(hook.v, hook.doc, hook)
+  if (v.length > 1) {
+    const range = document.createRange()
+    range.setStartBefore(hook.children[0])
+    range.setEndAfter(hook.children.at(-1)!)
+    const fragment = range.extractContents()
+    reconcile(fragment as never, v)
+    range.insertNode(fragment)
+  } else {
+    v[0].replace(hook.parent, hook.children[0])
+  }
 }
 
 //

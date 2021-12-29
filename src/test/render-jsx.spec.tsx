@@ -6,6 +6,15 @@ let c: any
 beforeEach(() => (c = document.createElement('div')))
 
 describe('jsx', () => {
+  it('single fragment', () => {
+    render(<></>, c)
+  })
+
+  it('single fragment function', () => {
+    const Foo = () => <></>
+    render(<Foo />, c)
+  })
+
   it('function w/keyed children', () => {
     const Foo = () => <li></li>
     {
@@ -28,6 +37,45 @@ describe('jsx', () => {
         c
       )
       const res: any = Array.from(c.childNodes)
+      expect(res[1]).toBe(lis[0])
+    }
+  })
+
+  it('function w/keyed array and a different element', () => {
+    const Foo = () => <li></li>
+    {
+      render(
+        <>
+          {[1, 2, 3].map(x => (
+            <Foo key={x} />
+          ))}
+          <div id="another"></div>
+        </>,
+        c
+      )
+      const lis: any = Array.from(c.childNodes)
+      expect(lis[0].nodeName).toEqual('LI')
+      render(
+        <>
+          <div id="another"></div>
+          {[0, 1, 2, 3].map(x => (
+            <Foo key={x} />
+          ))}
+        </>,
+        c
+      )
+      let res: any = Array.from(c.childNodes)
+      expect(res[2]).toBe(lis[0])
+      render(
+        <>
+          {[0, 1, 2, 3, 4, 5].map(x => (
+            <Foo key={x} />
+          ))}
+          <div id="another"></div>
+        </>,
+        c
+      )
+      res = Array.from(c.childNodes)
       expect(res[1]).toBe(lis[0])
     }
   })

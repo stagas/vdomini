@@ -8,15 +8,191 @@ describe('hooks', () => {
   it('p', () => {
     let hook: any
     let content = 'foo'
+    let called = 0
     const Foo = () => {
       hook = current.hook
+      called++
       return <p>{content}</p>
     }
     render(<Foo />, c)
+    expect(called).toEqual(1)
     expect(c.firstChild.textContent).toEqual('foo')
     content = 'bar'
     trigger(hook)
+    expect(called).toEqual(2)
     expect(c.firstChild.textContent).toEqual('bar')
+  })
+
+  it('same tree', () => {
+    const hooks: any[] = []
+    let content = 'foo'
+    let calledFoo = 0
+    let calledBar = 0
+    const Bar = () => {
+      if (!hooks.includes(current.hook)) hooks.push(current.hook)
+      calledBar++
+      return <p>{content}</p>
+    }
+    const Foo = () => {
+      if (!hooks.includes(current.hook)) hooks.push(current.hook)
+      calledFoo++
+      return <Bar />
+    }
+    render(<Foo />, c)
+    expect(calledFoo).toEqual(1)
+    expect(calledBar).toEqual(1)
+    expect(c.firstChild.textContent).toEqual('foo')
+    expect(hooks.length).toEqual(1) // 1 because the child inherits from the parent
+    content = 'bar'
+    hooks.splice(0).forEach(hook => trigger(hook))
+    expect(hooks.length).toEqual(1)
+    expect(calledFoo).toEqual(2)
+    expect(calledBar).toEqual(2)
+    expect(c.firstChild.textContent).toEqual('bar')
+    expect(hooks.length).toEqual(1)
+    expect(calledFoo).toEqual(2)
+    expect(calledBar).toEqual(2)
+    content = 'zoo'
+    hooks.splice(0).forEach(hook => trigger(hook))
+    expect(hooks.length).toEqual(1)
+    expect(calledFoo).toEqual(3)
+    expect(calledBar).toEqual(3)
+    expect(c.firstChild.textContent).toEqual('zoo')
+    content = 'zoo'
+  })
+
+  it('different tree', () => {
+    const hooks: any[] = []
+    let content = 'foo'
+    let calledFoo = 0
+    let calledBar = 0
+    const Bar = () => {
+      if (!hooks.includes(current.hook)) hooks.push(current.hook)
+      calledBar++
+      return <p>{content}</p>
+    }
+    const Foo = () => {
+      if (!hooks.includes(current.hook)) hooks.push(current.hook)
+      calledFoo++
+      return (
+        <div>
+          <Bar />
+        </div>
+      )
+    }
+    render(<Foo />, c)
+    expect(calledFoo).toEqual(1)
+    expect(calledBar).toEqual(1)
+    expect(c.firstChild.textContent).toEqual('foo')
+    expect(hooks.length).toEqual(2)
+    content = 'bar'
+    hooks
+      .splice(0)
+      .filter(hook => hook.parent)
+      .forEach(hook => trigger(hook))
+    expect(hooks.filter(hook => hook.parent).length).toEqual(2)
+    expect(hooks.length).toEqual(3)
+    expect(calledFoo).toEqual(2)
+    expect(calledBar).toEqual(3)
+    expect(c.firstChild.textContent).toEqual('bar')
+    expect(calledFoo).toEqual(2)
+    expect(calledBar).toEqual(3)
+    content = 'zoo'
+    hooks
+      .splice(0)
+      .filter(hook => hook.parent)
+      .forEach(hook => trigger(hook))
+    expect(hooks.filter(hook => hook.parent).length).toEqual(2)
+    expect(hooks.length).toEqual(3)
+    expect(hooks.length).toEqual(3)
+    expect(calledFoo).toEqual(3)
+    expect(calledBar).toEqual(5)
+    expect(c.firstChild.textContent).toEqual('zoo')
+    content = 'zoo'
+  })
+
+  it('same tree using useHook', () => {
+    const hooks: any[] = []
+    let content = 'foo'
+    let calledFoo = 0
+    let calledBar = 0
+    const Bar = () => {
+      const hook = useHook()
+      if (!hooks.includes(hook)) hooks.push(hook)
+      calledBar++
+      return <p>{content}</p>
+    }
+    const Foo = () => {
+      const hook = useHook()
+      if (!hooks.includes(hook)) hooks.push(hook)
+      calledFoo++
+      return <Bar />
+    }
+    render(<Foo />, c)
+    expect(calledFoo).toEqual(1)
+    expect(calledBar).toEqual(1)
+    expect(c.firstChild.textContent).toEqual('foo')
+    expect(hooks.length).toEqual(1) // 1 because the child inherits from the parent
+    content = 'bar'
+    hooks.splice(0).forEach(hook => hook())
+    expect(hooks.length).toEqual(1)
+    expect(calledFoo).toEqual(2)
+    expect(calledBar).toEqual(2)
+    expect(c.firstChild.textContent).toEqual('bar')
+    expect(hooks.length).toEqual(1)
+    expect(calledFoo).toEqual(2)
+    expect(calledBar).toEqual(2)
+    content = 'zoo'
+    hooks.splice(0).forEach(hook => hook())
+    expect(hooks.length).toEqual(1)
+    expect(calledFoo).toEqual(3)
+    expect(calledBar).toEqual(3)
+    expect(c.firstChild.textContent).toEqual('zoo')
+    content = 'zoo'
+  })
+
+  it('different tree using useHook', () => {
+    const hooks: any[] = []
+    let content = 'foo'
+    let calledFoo = 0
+    let calledBar = 0
+    const Bar = () => {
+      const hook = useHook()
+      if (!hooks.includes(hook)) hooks.push(hook)
+      calledBar++
+      return <p>{content}</p>
+    }
+    const Foo = () => {
+      const hook = useHook()
+      if (!hooks.includes(hook)) hooks.push(hook)
+      calledFoo++
+      return (
+        <div>
+          <Bar />
+        </div>
+      )
+    }
+    render(<Foo />, c)
+    expect(calledFoo).toEqual(1)
+    expect(calledBar).toEqual(1)
+    expect(c.firstChild.textContent).toEqual('foo')
+    expect(hooks.length).toEqual(2)
+    content = 'bar'
+    hooks.splice(0).forEach(hook => hook())
+    expect(hooks.length).toEqual(3)
+    expect(calledFoo).toEqual(2)
+    expect(calledBar).toEqual(3)
+    expect(c.firstChild.textContent).toEqual('bar')
+    expect(hooks.length).toEqual(3)
+    expect(calledFoo).toEqual(2)
+    expect(calledBar).toEqual(3)
+    content = 'zoo'
+    hooks.splice(0).forEach(hook => hook())
+    expect(hooks.length).toEqual(3)
+    expect(calledFoo).toEqual(3)
+    expect(calledBar).toEqual(5)
+    expect(c.firstChild.textContent).toEqual('zoo')
+    content = 'zoo'
   })
 
   it('p inc a number', () => {
@@ -268,11 +444,11 @@ describe('hooks', () => {
     let hook_foo: any
     let i = 0
     const Bar = () => {
-      hook_bar = current.hook
+      hook_bar = hook_bar ?? current.hook
       return <b>{i++}</b>
     }
     const Foo = () => {
-      hook_foo = current.hook
+      hook_foo = hook_foo ?? current.hook
       return (
         <p>
           {i++}
@@ -284,8 +460,10 @@ describe('hooks', () => {
     expect(c.innerHTML).toEqual('<p>0<b>1</b></p>')
     trigger(hook_bar)
     expect(c.innerHTML).toEqual('<p>0<b>2</b></p>')
+
     trigger(hook_foo)
     expect(c.innerHTML).toEqual('<p>3<b>4</b></p>')
+
     trigger(hook_bar)
     expect(c.innerHTML).toEqual('<p>3<b>5</b></p>')
   })
@@ -561,5 +739,167 @@ describe('hooks', () => {
     expect(target).toBe(button)
     expect(self).toBe(button)
     expect(prevented).toBe(true)
+  })
+
+  it('deep hook 2 layers', () => {
+    let hook: any
+    let i = 0
+    const Bar = () => {
+      hook = useHook()
+      return <p>{i++}</p>
+    }
+    const Foo = () => {
+      return <Bar />
+    }
+    render(<Foo />, c)
+    expect(c.firstChild.textContent).toEqual('0')
+    hook()
+    expect(c.firstChild.textContent).toEqual('1')
+    hook()
+    expect(c.firstChild.textContent).toEqual('2')
+  })
+
+  it('deep hook 3 layers', () => {
+    let hook: any
+    let i = 0
+    const Zoo = () => {
+      hook = useHook()
+      return <p>{i++}</p>
+    }
+    const Bar = () => {
+      return <Zoo />
+    }
+    const Foo = () => {
+      return <Bar />
+    }
+    render(<Foo />, c)
+    expect(c.firstChild.textContent).toEqual('0')
+    hook()
+    expect(c.firstChild.textContent).toEqual('1')
+    hook()
+    expect(c.firstChild.textContent).toEqual('2')
+  })
+
+  it('deep hook 3 layers, top div', () => {
+    let hook: any
+    let i = 0
+    const Zoo = () => {
+      hook = useHook()
+      return <p>{i++}</p>
+    }
+    const Bar = () => {
+      return <Zoo />
+    }
+    const Foo = () => {
+      return (
+        <div>
+          <Bar />
+        </div>
+      )
+    }
+    render(<Foo />, c)
+    expect(c.firstChild.textContent).toEqual('0')
+    hook()
+    expect(c.firstChild.textContent).toEqual('1')
+    hook()
+    expect(c.firstChild.textContent).toEqual('2')
+  })
+
+  it('prevent retrigger', () => {
+    let hook: any
+    let i = 0
+    const Foo = () => {
+      if (!hook) hook = useHook()
+      return <p>{i++}</p>
+    }
+    render(<Foo />, c)
+    expect(c.firstChild.textContent).toEqual('0')
+    hook()
+    expect(c.firstChild.textContent).toEqual('1')
+    hook()
+    expect(c.firstChild.textContent).toEqual('2')
+  })
+
+  it('empty fragment that updates', () => {
+    let hook: any
+    let cond = false
+    const Foo = () => {
+      hook = current.hook
+      return !cond ? <></> : <div>ok</div>
+    }
+    render(<Foo />, c)
+    expect(c.textContent).toEqual('')
+    cond = true
+    trigger(hook)
+
+    expect(c.textContent).toEqual('ok')
+  })
+
+  it('fragment that updates deep', () => {
+    let hook: any
+    let cond = false
+    const Bar = () => {
+      hook = current.hook
+      return !cond ? <></> : <div>ok</div>
+    }
+    const Foo = () => {
+      return <Bar />
+    }
+    render(<Foo />, c)
+    expect(c.textContent).toEqual('')
+    cond = true
+    trigger(hook)
+    expect(c.textContent).toEqual('ok')
+  })
+
+  it('fragment that updates deep fragment', () => {
+    let hook: any
+    let cond = false
+    const Bar = () => {
+      hook = current.hook
+      return !cond ? <></> : <>ok</>
+    }
+    const Foo = () => {
+      return <Bar />
+    }
+    render(<Foo />, c)
+    expect(c.textContent).toEqual('')
+    cond = true
+    trigger(hook)
+    expect(c.textContent).toEqual('ok')
+  })
+
+  it('fragment that updates deep fragment, first div', () => {
+    let hook: any
+    let cond = false
+    const Bar = () => {
+      hook = current.hook
+      return !cond ? <div></div> : <>ok</>
+    }
+    const Foo = () => {
+      return <Bar />
+    }
+    render(<Foo />, c)
+    expect(c.textContent).toEqual('')
+    cond = true
+    trigger(hook)
+    expect(c.textContent).toEqual('ok')
+  })
+
+  it('multiple hooks same parent', () => {
+    let hookA: any
+    let hookB: any
+    let i = 0
+    const Foo = () => {
+      hookA = useHook()
+      hookB = useHook()
+      return <p>{i++}</p>
+    }
+    render(<Foo />, c)
+    expect(c.firstChild.textContent).toEqual('0')
+    hookA()
+    expect(c.firstChild.textContent).toEqual('1')
+    hookB()
+    expect(c.firstChild.textContent).toEqual('2')
   })
 })

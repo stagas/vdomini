@@ -630,6 +630,50 @@ describe('render(v, el)', () => {
     expect(prev[2]).toBe(next[1])
     expect(c.innerHTML).toEqual('<ul><li id="second"></li><li id="third"></li><li id="first"></li></ul>')
   })
+
+  it('fragment w/children keyed reorder', () => {
+    render(
+      {
+        type: Fragment,
+        props: null,
+        children: [
+          { type: 'li', props: { id: 'first', key: 1 }, children: [] },
+          { type: 'li', props: { id: 'second', key: 'foo' }, children: [] },
+          { type: 'li', props: { id: 'third', key: true }, children: [] },
+        ],
+      },
+      c
+    )
+    const prev = Array.from(c.querySelectorAll('li'))
+    expect(prev[0].id).toEqual('first')
+    expect(c.innerHTML).toEqual('<li id="first"></li><li id="second"></li><li id="third"></li>')
+    render(
+      {
+        type: Fragment,
+        props: null,
+        children: [
+          { type: 'li', props: { id: 'second', key: 'foo' }, children: [] },
+          { type: 'li', props: { id: 'third', key: true }, children: [] },
+          { type: 'li', props: { id: 'first', key: 1 }, children: [] },
+        ],
+      },
+      c
+    )
+    const next = Array.from(c.querySelectorAll('li'))
+    expect(prev[0].id).toEqual('first')
+    expect(prev[1].id).toEqual('second')
+    expect(prev[2].id).toEqual('third')
+
+    expect(next[0].id).toEqual('second')
+    expect(next[1].id).toEqual('third')
+    expect(next[2].id).toEqual('first')
+
+    expect(prev[0] === next[2]).toBe(true)
+    expect(prev[1]).toBe(next[0])
+    expect(prev[2]).toBe(next[1])
+    expect(c.innerHTML).toEqual('<li id="second"></li><li id="third"></li><li id="first"></li>')
+  })
+
   it('ul w/children keyed swap', () => {
     render(
       {
