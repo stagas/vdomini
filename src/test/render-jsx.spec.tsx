@@ -15,6 +15,17 @@ describe('jsx', () => {
     render(<Foo />, c)
   })
 
+  it('passing ...props to real element', () => {
+    const Foo = (props: any) => <div {...props}></div>
+    render(<Foo style="width:10px" />, c)
+  })
+
+  it('updating ...props to real element', () => {
+    const Foo = (props: any) => <div {...props}></div>
+    render(<Foo style="width:10px" />, c)
+    render(<Foo style="width:10px" />, c)
+  })
+
   it('function w/keyed children', () => {
     const Foo = () => <li></li>
     {

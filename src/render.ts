@@ -150,7 +150,11 @@ const createProp = (el: Element, _type: string, name: string, value: unknown, at
       return
     default:
       if (value != null) {
-        ;(el as Any)[name] = value
+        try {
+          ;(el as Any)[name] = value
+        } catch {
+          //
+        }
       }
   }
 }
@@ -203,7 +207,12 @@ const updateProps = (el: Element, type: string, next: VProps) => {
       if (typeof value === 'function') {
         const attr = name //toAttr[name] || name
         props[attr] = (el as Any)[attr] = value
-      } else if (!(name in attrs)) (el as Any)[name] = value
+      } else if (!(name in attrs))
+        try {
+          ;(el as Any)[name] = value
+        } catch {
+          //
+        }
     }
   }
 
